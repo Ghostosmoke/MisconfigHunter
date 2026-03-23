@@ -1,0 +1,32 @@
+# ❌ VULNERABLE: Federation trust между облаками без MFA
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: arn:aws:iam::123456789012:saml-provider/azure-ad
+          Action: sts:AssumeRoleWithSAML
+          # ⚠️ TRIGGER: нет условия MFA
+
+---
+# ✅ SECURE: Federation trust с MFA
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: arn:aws:iam::123456789012:saml-provider/azure-ad
+          Action: sts:AssumeRoleWithSAML
+          Condition:
+            Bool:
+              aws:MultiFactorAuthPresent: "true"  # ✅ MFA требуется

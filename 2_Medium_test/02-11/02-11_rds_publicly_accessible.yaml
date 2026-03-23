@@ -1,0 +1,26 @@
+# ❌ VULNERABLE: RDS_instance с публичным доступом
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: production-db
+      Engine: postgres
+      DBInstanceClass: db.t3.medium
+      PubliclyAccessible: true  # ⚠️ TRIGGER: публичный доступ
+      StorageEncrypted: false
+
+---
+# ✅ SECURE: RDS instance без публичного доступа
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: production-db
+      Engine: postgres
+      DBInstanceClass: db.t3.medium
+      PubliclyAccessible: false  # ✅ OK: приватный доступ
+      StorageEncrypted: true
+      VPCSecurityGroups:
+      - !Ref DatabaseSecurityGroup

@@ -1,0 +1,35 @@
+# ❌ VULNERABLE: Azure Storage with public access level
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "vulnerablestorage",
+      "properties": {
+        "allowBlobPublicAccess": true,  # ⚠️ TRIGGER: public blob access
+        "minimumTlsVersion": "TLS1_2"
+      }
+    }
+  ]
+}
+
+---
+# ✅ SECURE: Azure Storage with public access disabled
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "securestorage",
+      "properties": {
+        "allowBlobPublicAccess": false,  # ✅ OK: no public access
+        "minimumTlsVersion": "TLS1_2",
+        "networkAcls": {
+          "defaultAction": "Deny"
+        }
+      }
+    }
+  ]
+}

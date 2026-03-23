@@ -1,0 +1,28 @@
+# ❌ VULNERABLE: Dashboard Service exposed via LoadBalancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  type: LoadBalancer  # ⚠️ TRIGGER: publicly exposed
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+
+---
+# ✅ SECURE: Dashboard accessible via ClusterIP + kubectl proxy
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  type: ClusterIP  # ✅ OK: internal only
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard

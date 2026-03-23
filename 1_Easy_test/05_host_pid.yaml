@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: Pod shares host PID namespace
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  hostPID: true  # ⚠️ TRIGGER: host PID namespace
+  containers:
+  - name: app
+    image: nginx:1.24
+
+---
+# ✅ SECURE: Pod has isolated PID namespace
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  # hostPID defaults to false - OK
+  containers:
+  - name: app
+    image: nginx:1.24

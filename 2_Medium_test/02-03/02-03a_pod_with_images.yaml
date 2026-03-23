@@ -1,0 +1,24 @@
+# ❌ VULNERABLE: Образы из недоверенных реестров
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  containers:
+  - name: app1
+    image: docker.io/nginx:1.24  # ⚠️ TRIGGER: public registry
+  - name: app2
+    image: gcr.io/community/image:latest  # ⚠️ TRIGGER: untrusted
+
+---
+# ✅ SECURE: Образы из доверенных реестров
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  containers:
+  - name: app1
+    image: registry.company.internal/app:1.2.3  # ✅ OK: private registry
+  - name: app2
+    image: gcr.io/my-project/app@sha256:abc123  # ✅ OK: trusted with digest

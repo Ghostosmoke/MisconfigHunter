@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref VulnerableBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal: "*"  # ⚠️ TRIGGER: любой principal
+          Action: "s3:GetObject"
+          Resource: !Sub "${VulnerableBucket.Arn}/*"
+
+---
+# ✅ SECURE: Ограниченная цепочка доступа
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SecureBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: !GetAtt SecureRole.Arn  # ✅ Только конкретная роль
+          Action: "s3:GetObject"
+          Resource: !Sub "${SecureBucket.Arn}/*"
+          Condition:
+            StringEquals:
+              aws:SourceVpc: vpc-123456  # ✅ Ограничение по VPC

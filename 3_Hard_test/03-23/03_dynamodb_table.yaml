@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableDynamoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: user-data
+      AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      # ⚠️ TRIGGER: нет encryption
+      # ⚠️ TRIGGER: нет point-in-time recovery
+
+---
+# ✅ SECURE: DynamoDB с защитой
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureDynamoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: user-data
+      AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true  # ✅ Шифрование включено
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true  # ✅ PITR включён

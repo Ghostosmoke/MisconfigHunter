@@ -1,0 +1,21 @@
+# ❌ VULNERABLE: S3 bucket with PublicWrite ACL
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicReadWrite  # ⚠️ TRIGGER: public write ACL
+
+---
+# ✅ SECURE: No public write permissions
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private  # ✅ OK
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true

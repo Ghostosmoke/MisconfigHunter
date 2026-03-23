@@ -1,0 +1,10 @@
+# Конфигурация доверенных реестров
+trustedRegistries:
+  - "registry.company.internal"
+  - "gcr.io/my-project"
+  - "123456789012.dkr.ecr.us-east-1.amazonaws.com"
+
+untrustedRegistries:
+  - "docker.io"
+  - "gcr.io/community"
+  - "quay.io"

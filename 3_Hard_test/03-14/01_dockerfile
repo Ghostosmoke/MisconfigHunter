@@ -1,0 +1,12 @@
+# ❌ VULNERABLE: Образ использует базовый образ с CVE
+FROM ubuntu:20.04  # ⚠️ TRIGGER: образ с известными CVE
+RUN apt-get update && apt-get install -y nginx
+COPY . /app
+CMD ["nginx", "-g", "daemon off;"]
+
+---
+# ✅ SECURE: Образ с обновлённой базой
+FROM ubuntu:22.04  # ✅ Актуальная версия
+RUN apt-get update && apt-get install -y nginx && apt-get clean
+COPY . /app
+CMD ["nginx", "-g", "daemon off;"]

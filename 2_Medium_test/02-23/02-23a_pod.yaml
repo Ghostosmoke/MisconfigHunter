@@ -1,0 +1,29 @@
+# ❌ VULNERABLE: Pod без привязки к PSP
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: true
+  # ⚠️ TRIGGER: нет serviceAccount с привязкой к PSP
+
+---
+# ✅ SECURE: Pod с правильным ServiceAccount
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+  namespace: default
+spec:
+  serviceAccountName: restricted-sa
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false

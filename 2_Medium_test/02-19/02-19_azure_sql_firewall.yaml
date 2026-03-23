@@ -1,0 +1,32 @@
+# ❌ VULNERABLE: Azure SQL с открытым фаерволом
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "2022-05-01",
+      "name": "vulnerable-sql/AllowAll",
+      "properties": {
+        "startIpAddress": "0.0.0.0",  # ⚠️ TRIGGER: весь диапазон
+        "endIpAddress": "255.255.255.255"  # ⚠️ TRIGGER: весь диапазон
+      }
+    }
+  ]
+}
+
+---
+# ✅ SECURE: Azure SQL с ограниченным фаерволом
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "2022-05-01",
+      "name": "secure-sql/AllowOffice",
+      "properties": {
+        "startIpAddress": "203.0.113.0",
+        "endIpAddress": "203.0.113.255"  # ✅ OK: конкретный диапазон
+      }
+    }
+  ]
+}

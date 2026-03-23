@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: Pod shares host network namespace
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  hostNetwork: true  # ⚠️ TRIGGER: host network enabled
+  containers:
+  - name: app
+    image: nginx:1.24
+
+---
+# ✅ SECURE: Pod uses isolated network
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  # hostNetwork defaults to false - OK
+  containers:
+  - name: app
+    image: nginx:1.24

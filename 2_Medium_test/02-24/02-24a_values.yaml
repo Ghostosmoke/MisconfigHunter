@@ -1,0 +1,33 @@
+# ❌ VULNERABLE: values.yaml без schema validation
+# charts/my-app/values.yaml
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: latest  # ⚠️ TRIGGER: нет валидации тега
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}  # ⚠️ TRIGGER: нет валидации limits
+
+---
+# ✅ SECURE: values.yaml с валидацией
+# charts/my-app/values.yaml
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: 1.24.0  # ✅ OK: конкретная версия
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi

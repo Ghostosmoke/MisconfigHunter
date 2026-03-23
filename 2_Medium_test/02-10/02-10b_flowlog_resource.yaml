@@ -1,0 +1,24 @@
+# ❌ VULNERABLE: FlowLog не связан с VPC
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  OrphanFlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      ResourceId: vpc-12345678  # ⚠️ TRIGGER: хардкод ID, не ссылка
+      ResourceType: VPC
+      TrafficType: ALL
+      LogDestinationType: cloud-watch-logs
+      LogDestination: arn:aws:logs:us-east-1:123456789012:log-group:flow-logs
+
+---
+# ✅ SECURE: FlowLog правильно связан с VPC
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureFlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      ResourceId: !Ref SecureVPC  # ✅ OK: ссылка на ресурс
+      ResourceType: VPC
+      TrafficType: ALL
+      LogDestinationType: cloud-watch-logs
+      LogDestination: arn:aws:logs:us-east-1:123456789012:log-group:flow-logs

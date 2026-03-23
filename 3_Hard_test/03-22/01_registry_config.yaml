@@ -1,0 +1,39 @@
+# ❌ VULNERABLE: Registry позволяет push без auth
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: registry-config
+  namespace: docker-registry
+
+  config.yml: |
+    version: 0.1
+    http:
+      addr: :5000
+    storage:
+      filesystem:
+        rootdirectory: /var/lib/registry
+    auth:
+      htpasswd:
+        realm: basic-realm
+        path: /auth/htpasswd
+      # ⚠️ TRIGGER: auth секция закомментирована или отсутствует
+
+---
+# ✅ SECURE: Registry с обязательной аутентификацией
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: registry-config
+  namespace: docker-registry
+
+  config.yml: |
+    version: 0.1
+    http:
+      addr: :5000
+    auth:
+      htpasswd:
+        realm: basic-realm
+        path: /auth/htpasswd  # ✅ Auth включена
+    storage:
+      filesystem:
+        rootdirectory: /var/lib/registry

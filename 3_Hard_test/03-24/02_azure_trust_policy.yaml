@@ -1,0 +1,19 @@
+# ❌ VULNERABLE: Azure trust без conditional access
+resources:
+- name: vulnerable-azure-federation
+  type: Microsoft.Graph/servicePrincipals
+  properties:
+    appId: aws-account-id
+    # ⚠️ TRIGGER: нет Conditional Access Policy
+
+---
+# ✅ SECURE: Azure trust с Conditional Access
+resources:
+- name: secure-azure-federation
+  type: Microsoft.Graph/servicePrincipals
+  properties:
+    appId: aws-account-id
+    conditionalAccessPolicy:
+      enabled: true
+      requireMFA: true  # ✅ MFA требуется
+      requireCompliantDevice: true  # ✅ Устройство должно быть compliant

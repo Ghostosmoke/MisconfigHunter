@@ -1,0 +1,26 @@
+# ❌ VULNERABLE: Actions без pin по SHA
+# .github/workflows/ci.yml
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3  # ⚠️ TRIGGER: тег вместо SHA
+    - uses: actions/setup-node@v3  # ⚠️ TRIGGER: тег вместо SHA
+    - run: npm ci
+    - run: npm test
+
+---
+# ✅ SECURE: Actions pinned по SHA
+# .github/workflows/ci.yml
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # ✅ OK: SHA pin
+    - uses: actions/setup-node@64ed1c7eab4cce3f7f9d83c9f72530121efbde3f  # ✅ OK: SHA pin
+    - run: npm ci
+    - run: npm test

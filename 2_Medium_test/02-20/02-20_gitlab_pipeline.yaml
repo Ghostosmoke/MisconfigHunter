@@ -1,0 +1,35 @@
+# ❌ VULNERABLE: Deploy в prod без approval
+# .gitlab-ci.yml
+stages:
+  - build
+  - test
+  - deploy
+
+deploy_production:
+  stage: deploy
+  script:
+    - ./deploy-to-prod.sh
+  only:
+    - main
+  # ⚠️ TRIGGER: отсутствует when: manual или approval rule
+
+---
+# ✅ SECURE: Deploy в prod с approval
+# .gitlab-ci.yml
+stages:
+  - build
+  - test
+  - deploy
+
+deploy_production:
+  stage: deploy
+  script:
+    - ./deploy-to-prod.sh
+  only:
+    - main
+  when: manual  # ✅ OK: требует ручного запуска
+  environment:
+    name: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual

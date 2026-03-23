@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: IAM policy разрешает allUsers
+resources:
+- name: vulnerable-function-iam
+  type: cloudfunctions.v1.function.iam
+  properties:
+    function: vulnerable-function
+    bindings:
+    - role: roles/cloudfunctions.invoker
+      members:
+      - allUsers  # ⚠️ TRIGGER: публичный доступ
+
+---
+# ✅ SECURE: IAM policy с ограниченным доступом
+resources:
+- name: secure-function-iam
+  type: cloudfunctions.v1.function.iam
+  properties:
+    function: secure-function
+    bindings:
+    - role: roles/cloudfunctions.invoker
+      members:
+      - serviceAccount:app-sa@my-project.iam.gserviceaccount.com  # ✅ OK

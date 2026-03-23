@@ -1,0 +1,23 @@
+# ❌ VULNERABLE: CloudTrail без мульти-регион логирования
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableTrail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      TrailName: application-trail
+      S3BucketName: my-cloudtrail-bucket
+      IsMultiRegionTrail: false  # ⚠️ TRIGGER: только один регион
+      EnableLogFileValidation: false  # ⚠️ TRIGGER: валидация отключена
+
+---
+# ✅ SECURE: CloudTrail с правильными настройками
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureTrail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      TrailName: application-trail
+      S3BucketName: my-cloudtrail-bucket
+      IsMultiRegionTrail: true  # ✅ OK: все регионы
+      EnableLogFileValidation: true  # ✅ OK: валидация включена
+      IncludeGlobalServiceEvents: true

@@ -1,0 +1,8 @@
+# ❌ VULNERABLE: KMS key с principal из другого аккаунта
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Cross-account encryption key
+      KeyPolicy: !GetAtt KeyPolicyDocument.PolicyDocument

@@ -1,0 +1,25 @@
+# ❌ VULNERABLE: Container runs with privileged: true
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      privileged: true  # ⚠️ TRIGGER: privileged mode enabled
+
+---
+# ✅ SECURE: Privileged mode explicitly disabled
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      privileged: false  # ✅ OK: explicitly disabled
+      allowPrivilegeEscalation: false

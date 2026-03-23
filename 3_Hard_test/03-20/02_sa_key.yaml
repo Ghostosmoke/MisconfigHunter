@@ -1,0 +1,20 @@
+# ❌ VULNERABLE: SA key без ротации
+resources:
+- name: vulnerable-sa-key
+  type: iam.v1.serviceAccountKey
+  properties:
+    serviceAccountId: !Ref vulnerable-sa
+    keyAlgorithm: RSA_2048
+    # ⚠️ TRIGGER: нет даты экспирации
+    # ⚠️ TRIGGER: ключ может быть в git
+
+---
+# ✅ SECURE: SA key с ограниченным сроком
+resources:
+- name: secure-sa-key
+  type: iam.v1.serviceAccountKey
+  properties:
+    serviceAccountId: !Ref secure-sa
+    keyAlgorithm: RSA_2048
+    validAfterTime: "2024-01-01T00:00:00Z"
+    validBeforeTime: "2024-04-01T00:00:00Z"  # ✅ 90 дней

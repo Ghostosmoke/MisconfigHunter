@@ -1,0 +1,8 @@
+# ❌ VULNERABLE: IAM пользователь с неиспользуемыми ключами 90+ дней
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: legacy-developer
+      # ⚠️ TRIGGER: пользователь существует но нет активности

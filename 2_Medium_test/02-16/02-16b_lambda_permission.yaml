@@ -1,0 +1,21 @@
+# ❌ VULNERABLE: Lambda Permission без ограничений
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerablePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref VulnerableLambda
+      Action: lambda:InvokeFunction
+      Principal: "*"  # ⚠️ TRIGGER: любой principal
+
+---
+# ✅ SECURE: Lambda Permission с ограничениями
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecurePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SecureLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:api-id/*"  # ✅ OK

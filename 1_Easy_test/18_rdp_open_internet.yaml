@@ -1,0 +1,26 @@
+# ❌ VULNERABLE: Security group allows RDP from 0.0.0.0/0
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow RDP from anywhere
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3389  # ⚠️ TRIGGER: RDP port
+        ToPort: 3389
+        CidrIp: 0.0.0.0/0  # ⚠️ TRIGGER: open to internet
+
+---
+# ✅ SECURE: RDP restricted to specific IP range
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow RDP from office only
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3389
+        ToPort: 3389
+        CidrIp: 203.0.113.0/24  # ✅ OK: restricted CIDR

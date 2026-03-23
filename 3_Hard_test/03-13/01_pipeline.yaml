@@ -1,0 +1,26 @@
+# ❌ VULNERABLE
+stages:
+  - build
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+    - curl -X POST https://external-service.com/webhook -H "Authorization: $API_TOKEN" -d "secret=$DB_PASSWORD"
+  only:
+    - main
+
+---
+# ✅ SECURE
+stages:
+  - build
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+    - ./deploy-internal.sh
+  only:
+    - main
+  variables:
+    CI_DEBUG_TRACE: "false"

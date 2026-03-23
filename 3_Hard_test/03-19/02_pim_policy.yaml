@@ -1,0 +1,23 @@
+# ❌ VULNERABLE: PIM policy без approval
+resources:
+- name: vulnerable-pim-policy
+  type: Microsoft.AAD/privilegedIdentityPolicy
+  properties:
+    roleDefinitionId: Global Administrator
+    approvalSettings:
+      isApprovalRequired: false  # ⚠️ TRIGGER: approval отключён
+      isApprovalRequiredForExtension: false
+
+---
+# ✅ SECURE: PIM policy с approval
+resources:
+- name: secure-pim-policy
+  type: Microsoft.AAD/privilegedIdentityPolicy
+  properties:
+    roleDefinitionId: Global Administrator
+    approvalSettings:
+      isApprovalRequired: true  # ✅ Approval включён
+      approverIds:
+      - admin-approver@company.com
+      isApprovalRequiredForExtension: true
+      maxActivationDuration: PT8H

@@ -1,0 +1,28 @@
+{
+  "version": 4,
+  "terraform_version": "1.6.0",
+  "resources": [
+    {
+      "type": "aws_s3_bucket",
+      "name": "app_bucket",
+      "instances": [
+        {
+          "attributes": {
+            "bucket": "my-app-bucket",
+            "acl": "private",
+            "versioning": {
+              "enabled": true
+            },
+            "encryption": {
+              "rule": {
+                "applyServerSideEncryptionByDefault": {
+                  "sseAlgorithm": "AES256"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

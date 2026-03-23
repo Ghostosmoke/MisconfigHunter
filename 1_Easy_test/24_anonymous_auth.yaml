@@ -1,0 +1,29 @@
+# ❌ VULNERABLE: API server with anonymous auth enabled
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-apiserver
+    image: k8s.gcr.io/kube-apiserver:v1.28.0
+    command:
+    - kube-apiserver
+    - --anonymous-auth=true  # ⚠️ TRIGGER: anonymous auth enabled
+
+---
+# ✅ SECURE: API server with anonymous auth disabled
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-apiserver
+    image: k8s.gcr.io/kube-apiserver:v1.28.0
+    command:
+    - kube-apiserver
+    - --anonymous-auth=false  # ✅ OK: anonymous auth disabled
+    - --authorization-mode=Node,RBAC

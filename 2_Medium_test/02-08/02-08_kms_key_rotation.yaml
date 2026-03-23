@@ -1,0 +1,34 @@
+# ❌ VULNERABLE: KMS ключ без ротации
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Application encryption key
+      EnableKeyRotation: false  # ⚠️ TRIGGER: ротация отключена
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+          Action: "kms:*"
+          Resource: "*"
+
+---
+# ✅ SECURE: KMS ключ с включённой ротацией
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Application encryption key
+      EnableKeyRotation: true  # ✅ OK: ротация включена
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+          Action: "kms:*"
+          Resource: "*"

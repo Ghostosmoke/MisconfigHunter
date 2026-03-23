@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: etcd without client certificate authentication
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+etcd:
+  local:
+    extraArgs:
+      client-cert-auth: "false"  # ⚠️ TRIGGER: cert auth disabled
+      listen-client-urls: "http://0.0.0.0:2379"
+
+---
+# ✅ SECURE: etcd with client certificate authentication
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+etcd:
+  local:
+    extraArgs:
+      client-cert-auth: "true"  # ✅ OK: cert auth enabled
+      listen-client-urls: "https://0.0.0.0:2379"
+    extraVolumes:
+    - name: etcd-certs
+      hostPath: /etc/kubernetes/pki/etcd
+      mountPath: /etc/kubernetes/pki/etcd

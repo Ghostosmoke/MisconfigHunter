@@ -1,0 +1,21 @@
+# ❌ VULNERABLE: VPC без Flow Logs
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      # ⚠️ TRIGGER: отсутствует связь с FlowLog
+
+---
+# ✅ SECURE: VPC с подключёнными Flow Logs
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true

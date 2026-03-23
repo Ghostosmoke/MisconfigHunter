@@ -1,0 +1,26 @@
+# ❌ VULNERABLE: Redis без пароля
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: default
+data:
+  redis.conf: |
+    port 6379
+    bind 0.0.0.0
+    # ⚠️ TRIGGER: requirepass не установлен
+    protected-mode no
+
+---
+# ✅ SECURE: Redis с паролем
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: default
+data:
+  redis.conf: |
+    port 6379
+    bind 127.0.0.1
+    requirepass StrongP@ssw0rd123  # ✅ OK: пароль установлен
+    protected-mode yes

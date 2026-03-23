@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: RDS instance без шифрования
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: production-db
+      Engine: postgres
+      StorageEncrypted: false  # ⚠️ TRIGGER: шифрование отключено
+      KmsKeyId: ""  # ⚠️ TRIGGER: KMS ключ не указан
+
+---
+# ✅ SECURE: RDS instance с шифрованием
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: production-db
+      Engine: postgres
+      StorageEncrypted: true  # ✅ OK: шифрование включено
+      KmsKeyId: arn:aws:kms:us-east-1:123456789012:key/abc-123

@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: Cloud Function с HTTP триггером
+resources:
+- name: vulnerable-function
+  type: cloudfunctions.v1.function
+  properties:
+    location: us-central1
+    runtime: python39
+    httpsTrigger:  # ⚠️ TRIGGER: HTTP триггер
+      url: https://us-central1-project.cloudfunctions.net/vulnerable-function
+    entryPoint: hello_world
+
+---
+# ✅ SECURE: Cloud Function без публичного HTTP
+resources:
+- name: secure-function
+  type: cloudfunctions.v1.function
+  properties:
+    location: us-central1
+    runtime: python39
+    eventTrigger:  # ✅ OK: event-based trigger
+      eventType: providers/cloud.pubsub/eventTypes/topic.publish
+      resource: projects/my-project/topics/my-topic

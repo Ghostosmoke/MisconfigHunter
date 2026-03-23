@@ -1,0 +1,16 @@
+{
+  "resources": [
+    {
+      "type": "aws_s3_bucket",
+      "name": "app_bucket",
+      "attributes": {
+        "bucket": "my-app-bucket",
+        "acl": "public-read",
+        "versioning": {
+          "enabled": false
+        },
+        "encryption": null
+      }
+    }
+  ]
+}

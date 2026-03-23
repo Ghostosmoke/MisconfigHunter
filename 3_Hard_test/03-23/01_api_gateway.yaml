@@ -1,0 +1,25 @@
+# ❌ VULNERABLE: API Gateway → Lambda → DynamoDB → SNS цепочка с эскалацией
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: public-api
+      # ⚠️ TRIGGER: нет API key requirement
+      # ⚠️ TRIGGER: нет rate limiting
+
+---
+# ✅ SECURE: API Gateway с защитой
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: secure-api
+      ApiKeySourceType: HEADER
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      Throttle:
+        BurstLimit: 100
+        RateLimit: 50

@@ -1,0 +1,43 @@
+# ❌ VULNERABLE: Ingress без TLS конфигурации
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vulnerable-ingress
+  namespace: production
+spec:
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 80
+  # ⚠️ TRIGGER: отсутствует секция tls
+
+---
+# ✅ SECURE: Ingress с TLS конфигурацией
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: secure-ingress
+  namespace: production
+spec:
+  tls:  # ✅ OK: TLS configured
+  - hosts:
+    - app.example.com
+    secretName: app-tls-secret
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 443

@@ -1,0 +1,37 @@
+# ❌ VULNERABLE: Volume с неправильными permissions
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: audit-log-volume
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /var/log/kubernetes
+    type: DirectoryOrCreate
+  # ⚠️ TRIGGER: нет проверки permissions на хосте
+
+---
+# ✅ SECURE: Volume с правильными permissions
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: secure-audit-log-volume
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /var/log/kubernetes
+    type: Directory
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/role
+          operator: In
+          values:
+          - master  # ✅ Только на master узлах

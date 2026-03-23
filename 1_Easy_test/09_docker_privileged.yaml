@@ -1,0 +1,15 @@
+# ❌ VULNERABLE: Service runs in privileged mode
+version: '3.8'
+services:
+  app:
+    image: nginx:1.24
+    privileged: true  # ⚠️ TRIGGER: privileged container
+
+---
+# ✅ SECURE: Privileged mode disabled
+version: '3.8'
+services:
+  app:
+    image: nginx:1.24
+    privileged: false  # ✅ OK: explicitly disabled
+    # Or omit entirely - defaults to false

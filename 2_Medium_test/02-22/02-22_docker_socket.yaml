@@ -1,0 +1,19 @@
+# ❌ VULNERABLE: Docker socket смонтирован в контейнер
+version: '3.8'
+services:
+  ci-runner:
+    image: gitlab/gitlab-runner:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # ⚠️ TRIGGER: docker socket
+      - ./builds:/builds
+    privileged: false
+
+---
+# ✅ SECURE: Docker socket не смонтирован
+version: '3.8'
+services:
+  ci-runner:
+    image: gitlab/gitlab-runner:latest
+    volumes:
+      - ./builds:/builds  # ✅ OK: только необходимые volume
+    # Альтернатива: использовать Docker-in-Docker с изоляцией

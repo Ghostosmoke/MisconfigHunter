@@ -1,0 +1,28 @@
+# ❌ VULNERABLE: No resource limits defined
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    # ⚠️ TRIGGER: no resources.limits section
+
+---
+# ✅ SECURE: CPU and memory limits defined
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    resources:
+      limits:  # ✅ OK: limits defined
+        cpu: "500m"
+        memory: "256Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"

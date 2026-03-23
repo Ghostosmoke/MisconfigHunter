@@ -1,0 +1,31 @@
+# ❌ VULNERABLE: IAM политика с wildcard в действии
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerablePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:*"  # ⚠️ TRIGGER: wildcard в действии
+          - "ec2:Describe*"  # ⚠️ TRIGGER: wildcard в действии
+          Resource: "*"
+
+---
+# ✅ SECURE: IAM политика с конкретными действиями
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecurePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:GetObject"  # ✅ OK: конкретное действие
+          - "s3:PutObject"  # ✅ OK: конкретное действие
+          - "ec2:DescribeInstances"  # ✅ OK: конкретное действие
+          Resource: "arn:aws:s3:::my-bucket/*"

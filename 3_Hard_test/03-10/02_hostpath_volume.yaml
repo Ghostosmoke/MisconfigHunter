@@ -1,0 +1,28 @@
+# ❌ VULNERABLE
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dangerous-hostpath
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /
+    type: DirectoryOrCreate
+
+---
+# ✅ SECURE
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: safe-hostpath
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/app
+    type: DirectoryOrCreate

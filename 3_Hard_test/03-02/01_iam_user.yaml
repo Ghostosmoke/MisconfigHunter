@@ -1,0 +1,10 @@
+# ❌ VULNERABLE: Пользователь с комбинацией политик для эскалации
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: developer
+      ManagedPolicyArns:
+      - !Ref PassRolePolicy
+      - !Ref CreatePolicyVersionPolicy

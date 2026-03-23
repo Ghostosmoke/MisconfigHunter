@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  CreatePolicyVersionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - "iam:CreatePolicyVersion"  # ⚠️ Часть комбинации для эскалации
+          - "iam:SetDefaultPolicyVersion"
+          Resource: "*"
+
+---
+# ✅ SECURE: Политики разделены или ограничены
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecurePassRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - "iam:PassRole"
+          Resource: "arn:aws:iam::*:role/limited-role"  # ✅ Ограниченный ресурс
+          Condition:
+            StringEquals:
+              iam:PassedToService: lambda.amazonaws.com  # ✅ Ограниченный сервис

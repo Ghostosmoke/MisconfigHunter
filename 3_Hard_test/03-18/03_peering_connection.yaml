@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  RouteTableA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCA
+      Routes:
+      - DestinationCidrBlock: 10.1.0.0/16  # ✅ Связан с VPCB
+        VpcPeeringConnectionId: !Ref PeeringConnection
+
+  RouteTableB:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCB
+      Routes:
+      - DestinationCidrBlock: 10.0.0.0/16  # ✅ Связан с VPCA
+        VpcPeeringConnectionId: !Ref PeeringConnection
+
+  # ⚠️ TRIGGER: Security Group разрешает весь трафик между VPC
+  VulnerableSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow all from peered VPC
+      VpcId: !Ref VPCA
+      SecurityGroupIngress:
+      - IpProtocol: "-1"  # ⚠️ Все протоколы
+        CidrIp: 10.1.0.0/16  # ⚠️ Весь диапазон VPCB
+
+---
+# ✅ SECURE: Ограниченный доступ между VPC
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Limited access from peered VPC
+      VpcId: !Ref VPCA
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 10.1.0.0/24  # ✅ Только конкретная подсеть

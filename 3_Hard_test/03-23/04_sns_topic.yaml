@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableSNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: notifications
+      # ⚠️ TRIGGER: нет policy restrictions
+
+  VulnerableTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal: "*"  # ⚠️ TRIGGER: любой может publish
+          Action: sns:Publish
+          Resource: !Ref VulnerableSNS
+
+---
+# ✅ SECURE: SNS с ограничениями
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureSNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: notifications
+      KmsMasterKeyId: !Ref SecureKMSKey  # ✅ Шифрование
+
+  SecureTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: !GetAtt SecureLambdaRole.Arn  # ✅ Только Lambda
+          Action: sns:Publish
+          Resource: !Ref SecureSNS

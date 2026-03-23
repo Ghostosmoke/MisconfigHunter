@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: data-processor
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt VulnerableRole.Arn
+      Environment:
+        Variables:
+          S3_BUCKET: sensitive-data-bucket
+
+  LambdaInvokePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: "lambda:InvokeFunction"  # ⚠️ TRIGGER: может вызывать Lambda
+          Resource: "*"

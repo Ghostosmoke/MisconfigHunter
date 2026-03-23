@@ -1,0 +1,13 @@
+# ❌ VULNERABLE: Federation policy без MFA
+federationPolicy:
+  mfaRequired: false  # ⚠️ TRIGGER: MFA отключён
+  sessionDuration: PT12H  # ⚠️ TRIGGER: долгая сессия
+
+---
+# ✅ SECURE: Federation policy с MFA
+federationPolicy:
+  mfaRequired: true  # ✅ MFA включён
+  sessionDuration: PT1H  # ✅ Короткая сессия
+  requireCompliantDevice: true
+  allowedIPRanges:
+  - 10.0.0.0/8

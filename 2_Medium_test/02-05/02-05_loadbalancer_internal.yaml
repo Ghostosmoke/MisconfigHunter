@@ -1,0 +1,33 @@
+# ❌ VULNERABLE: LoadBalancer без internal аннотации (публичный по умолчанию)
+apiVersion: v1
+kind: Service
+metadata:
+  name: vulnerable-lb
+  namespace: production
+  annotations:
+    # ⚠️ TRIGGER: отсутствует service.beta.kubernetes.io/aws-load-balancer-internal
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    app: web
+
+---
+# ✅ SECURE: LoadBalancer с internal аннотацией
+apiVersion: v1
+kind: Service
+metadata:
+  name: secure-lb
+  namespace: production
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"  # ✅ OK
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    app: web

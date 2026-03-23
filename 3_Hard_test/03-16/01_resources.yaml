@@ -1,0 +1,32 @@
+# ❌ VULNERABLE: Ресурсы без обязательных тегов
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-123456
+      InstanceType: t3.medium
+      # ⚠️ TRIGGER: отсутствуют теги owner, cost-center, env
+
+  VulnerableS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-bucket
+      # ⚠️ TRIGGER: отсутствуют теги
+
+---
+# ✅ SECURE: Ресурсы с обязательными тегами
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-123456
+      InstanceType: t3.medium
+      Tags:
+      - Key: owner
+        Value: team-platform
+      - Key: cost-center
+        Value: engineering
+      - Key: env
+        Value: production

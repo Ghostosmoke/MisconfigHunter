@@ -1,0 +1,32 @@
+# ❌ VULNERABLE: Dangerous Linux capabilities added
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      capabilities:
+        add:  # ⚠️ TRIGGER: dangerous capabilities
+        - SYS_ADMIN
+        - NET_ADMIN
+        - SYS_PTRACE
+
+---
+# ✅ SECURE: No dangerous capabilities, or dropped all
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      capabilities:
+        drop:  # ✅ OK: drop all capabilities
+        - ALL
+        add:  # ✅ OK: only minimal required
+        - NET_BIND_SERVICE

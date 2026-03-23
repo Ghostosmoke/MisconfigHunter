@@ -1,0 +1,26 @@
+# ❌ VULNERABLE: Pod использует SA с авто-монтированием токена
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+  namespace: default
+spec:
+  serviceAccountName: app-service-account
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    # ⚠️ TRIGGER: automountServiceAccountToken не отключен
+
+---
+# ✅ SECURE: Token mounting explicitly disabled
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+  namespace: default
+spec:
+  serviceAccountName: app-service-account
+  automountServiceAccountToken: false  # ✅ OK: отключено на уровне Pod
+  containers:
+  - name: app
+    image: nginx:1.24.0

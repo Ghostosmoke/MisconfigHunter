@@ -1,0 +1,46 @@
+# ❌ VULNERABLE
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-breakout
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: true
+      capabilities:
+        add:
+        - SYS_ADMIN
+    volumeMounts:
+    - name: host-root
+      mountPath: /host
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+
+---
+# ✅ SECURE
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-container
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    volumeMounts:
+    - name: app-data
+      mountPath: /data
+  volumes:
+  - name: app-data
+    emptyDir: {}

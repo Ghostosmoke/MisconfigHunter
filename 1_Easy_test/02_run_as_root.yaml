@@ -1,0 +1,27 @@
+# ❌ VULNERABLE: Running as UID 0 (root)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      runAsUser: 0  # ⚠️ TRIGGER: explicit root
+
+---
+# ✅ SECURE: Running as non-root user
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      allowPrivilegeEscalation: false

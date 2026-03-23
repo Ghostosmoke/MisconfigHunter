@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: Pod shares host IPC namespace
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  hostIPC: true  # ⚠️ TRIGGER: host IPC namespace
+  containers:
+  - name: app
+    image: nginx:1.24
+
+---
+# ✅ SECURE: Pod has isolated IPC namespace
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  # hostIPC defaults to false - OK
+  containers:
+  - name: app
+    image: nginx:1.24

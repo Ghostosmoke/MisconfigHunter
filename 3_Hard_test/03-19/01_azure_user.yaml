@@ -1,0 +1,22 @@
+# ❌ VULNERABLE: User с PIM role без approval workflow
+resources:
+- name: vulnerable-user
+  type: Microsoft.AAD/users
+  properties:
+    userPrincipalName: admin@company.com
+    assignedRoles:
+    - Global Administrator  # ⚠️ TRIGGER: privileged role
+    # ⚠️ TRIGGER: нет PIM settings
+
+---
+# ✅ SECURE: User с PIM и approval
+resources:
+- name: secure-user
+  type: Microsoft.AAD/users
+  properties:
+    userPrincipalName: admin@company.com
+    assignedRoles:
+    - role: Global Administrator
+      pimEnabled: true
+      approvalRequired: true  # ✅ Требуется approval
+      maxActivationDuration: PT8H  # ✅ Ограничение по времени

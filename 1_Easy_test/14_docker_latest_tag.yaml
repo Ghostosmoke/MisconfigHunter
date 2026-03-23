@@ -1,0 +1,16 @@
+# ❌ VULNERABLE: Image without tag or with :latest
+version: '3.8'
+services:
+  web1:
+    image: nginx  # ⚠️ TRIGGER: no tag
+  web2:
+    image: nginx:latest  # ⚠️ TRIGGER: :latest tag
+
+---
+# ✅ SECURE: Specific version or digest
+version: '3.8'
+services:
+  web1:
+    image: nginx:1.24.0-alpine  # ✅ OK: specific version
+  web2:
+    image: nginx@sha256:abc123...  # ✅ OK: immutable digest

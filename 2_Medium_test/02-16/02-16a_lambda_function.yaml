@@ -1,0 +1,27 @@
+# ❌ VULNERABLE: Lambda без проверки источника
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: public-handler
+      Runtime: python3.9
+      Handler: index.handler
+      Code:
+        S3Bucket: my-code-bucket
+        S3Key: lambda.zip
+      # ⚠️ TRIGGER: отсутствует Resource-based policy с условиями
+
+---
+# ✅ SECURE: Lambda с ограниченным доступом
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: public-handler
+      Runtime: python3.9
+      Handler: index.handler
+      Code:
+        S3Bucket: my-code-bucket
+        S3Key: lambda.zip

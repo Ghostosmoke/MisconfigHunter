@@ -1,0 +1,30 @@
+# ❌ VULNERABLE: Lambda для ротации отсутствует или без прав
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # ⚠️ TRIGGER: Lambda для ротации не определена
+
+---
+# ✅ SECURE: Lambda для ротации с правильными правами
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  RotationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: secret-rotation-handler
+      Runtime: python3.9
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt RotationLambdaRole.Arn
+
+  RotationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - !Ref SecretsManagerRotationPolicy

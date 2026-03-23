@@ -1,0 +1,9 @@
+# ❌ VULNERABLE: Цепочка доступа VM → IAM → S3 → Lambda → EC2
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-12345678
+      InstanceType: t3.medium
+      IamInstanceProfile: !Ref VulnerableInstanceProfile

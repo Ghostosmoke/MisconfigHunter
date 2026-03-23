@@ -1,0 +1,15 @@
+# ❌ VULNERABLE: Cosign policy отсутствует
+cosignPolicy:
+  enabled: false
+  # ⚠️ TRIGGER: verification отключена
+
+---
+# ✅ SECURE: Cosign policy включена
+cosignPolicy:
+  enabled: true
+  keyless:
+    enabled: true
+    issuers:
+      - "https://accounts.google.com"
+  keys:
+    - k8s://cosign-system/cosign-public-key

@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: data-processor
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt VulnerableLambdaRole.Arn
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref VulnerableDynamoDB
+          SNS_TOPIC: !Ref VulnerableSNS
+
+  VulnerableLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AdministratorAccess  # ⚠️ TRIGGER: admin access
+
+---
+# ✅ SECURE: Lambda с минимальными правами
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - !Ref LambdaDynamoDBAccess  # ✅ Только DynamoDB
+      - !Ref LambdaSNSAccess  # ✅ Только SNS

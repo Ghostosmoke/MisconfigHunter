@@ -1,0 +1,16 @@
+# ❌ VULNERABLE: Webhook без проверки URL
+webhookConfig:
+  url: https://external-service.com/webhook  # ⚠️ TRIGGER: внешний домен
+  secrets:
+    - API_TOKEN
+    - DB_PASSWORD
+  # ⚠️ TRIGGER: нет whitelist доменов
+
+---
+# ✅ SECURE: Webhook с whitelist доменов
+webhookConfig:
+  url: https://internal.company.com/webhook  # ✅ Внутренний домен
+  secrets: []  # ✅ Никаких секретов не передаётся
+  allowedDomains:
+    - "*.company.internal"
+    - "api.company.com"

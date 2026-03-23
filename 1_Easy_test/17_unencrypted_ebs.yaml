@@ -1,0 +1,19 @@
+# ❌ VULNERABLE: EBS volume without encryption
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: 100
+      Encrypted: false  # ⚠️ TRIGGER: encryption disabled
+
+---
+# ✅ SECURE: EBS volume with encryption enabled
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: 100
+      Encrypted: true  # ✅ OK: encryption enabled
+      KmsKeyId: arn:aws:kms:us-east-1:123456789012:key/abc-123

@@ -1,0 +1,11 @@
+# ❌ VULNERABLE: Policy ротации отсутствует
+saKeyRotationPolicy:
+  enabled: false
+  # ⚠️ TRIGGER: ротация отключена
+
+---
+# ✅ SECURE: Policy ротации включена
+saKeyRotationPolicy:
+  enabled: true
+  maxKeyAge: 90  # ✅ Ключи ротатятся каждые 90 дней
+  notifyBeforeExpiry: 14  # ✅ Уведомление за 14 дней

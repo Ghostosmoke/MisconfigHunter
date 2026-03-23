@@ -1,0 +1,34 @@
+# ❌ VULNERABLE: Security Group с широким CIDR (/16 или шире)
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Overly permissive security group
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 10.0.0.0/8  # ⚠️ TRIGGER: /8 слишком широкий
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 172.16.0.0/12  # ⚠️ TRIGGER: /12 слишком широкий
+
+---
+# ✅ SECURE: Security Group с узким CIDR (/24 или уже)
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Properly scoped security group
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 10.0.1.0/24  # ✅ OK: /24 допустим
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 10.0.2.0/24  # ✅ OK: /24 допустим

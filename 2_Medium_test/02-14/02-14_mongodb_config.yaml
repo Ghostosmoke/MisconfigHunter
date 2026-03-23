@@ -1,0 +1,31 @@
+# ❌ VULNERABLE: MongoDB без авторизации
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-config
+  namespace: default
+data:
+  mongod.conf: |
+    storage:
+      dbPath: /data/db
+    net:
+      port: 27017
+    security:
+      authorization: disabled  # ⚠️ TRIGGER: авторизация отключена
+
+---
+# ✅ SECURE: MongoDB с авторизацией
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-config
+  namespace: default
+data:
+  mongod.conf: |
+    storage:
+      dbPath: /data/db
+    net:
+      port: 27017
+      bindIp: 127.0.0.1
+    security:
+      authorization: enabled  # ✅ OK: авторизация включена

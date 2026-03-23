@@ -1,0 +1,15 @@
+# ❌ VULNERABLE: Policy разрешает анонимный push
+registryAccessPolicy:
+  anonymousPull: true
+  anonymousPush: true  # ⚠️ TRIGGER: анонимный push разрешён
+  # ⚠️ TRIGGER: нет whitelist пользователей
+
+---
+# ✅ SECURE: Policy требует аутентификацию
+registryAccessPolicy:
+  anonymousPull: false  # ✅ Требуется auth для pull
+  anonymousPush: false  # ✅ Требуется auth для push
+  allowedUsers:
+  - deploy-bot
+  - ci-runner
+  requiredMFA: true  # ✅ MFA обязателен

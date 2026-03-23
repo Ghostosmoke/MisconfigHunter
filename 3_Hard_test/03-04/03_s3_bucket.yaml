@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: sensitive-data-bucket
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false  # ⚠️ TRIGGER: возможен публичный доступ
+
+  S3FullAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: "s3:*"  # ⚠️ TRIGGER: полный доступ к S3
+          Resource: "*"

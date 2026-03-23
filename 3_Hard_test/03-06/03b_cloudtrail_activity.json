@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "eventTime": "2024-01-15T10:30:00Z",
+      "eventName": "DeactivateAccessKey",
+      "userIdentity": {
+        "userName": "legacy-developer"
+      },
+      "requestParameters": {
+        "accessKeyId": "AKIA1234567890"
+      }
+    }
+  ]
+}

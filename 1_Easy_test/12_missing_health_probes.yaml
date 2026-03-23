@@ -1,0 +1,31 @@
+# ❌ VULNERABLE: No liveness/readiness probes
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    # ⚠️ TRIGGER: no livenessProbe or readinessProbe
+
+---
+# ✅ SECURE: Health probes configured
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    livenessProbe:  # ✅ OK: liveness probe
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 15
+    readinessProbe:  # ✅ OK: readiness probe
+      httpGet:
+        path: /ready
+        port: 8080
+      initialDelaySeconds: 5

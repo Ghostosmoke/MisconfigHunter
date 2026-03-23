@@ -1,0 +1,30 @@
+{
+  "driftDetected": true,
+  "driftedResources": [
+    {
+      "resourceType": "aws_s3_bucket",
+      "resourceName": "app_bucket",
+      "changes": [
+        {
+          "attribute": "acl",
+          "expected": "private",
+          "actual": "public-read",
+          "severity": "CRITICAL"
+        },
+        {
+          "attribute": "versioning.enabled",
+          "expected": true,
+          "actual": false,
+          "severity": "HIGH"
+        },
+        {
+          "attribute": "encryption",
+          "expected": "AES256",
+          "actual": null,
+          "severity": "CRITICAL"
+        }
+      ]
+    }
+  ],
+  "remediationRequired": true
+}

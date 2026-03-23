@@ -1,0 +1,56 @@
+# ❌ VULNERABLE: NSG с правилом Any-Any
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2022-05-01",
+      "name": "vulnerable-nsg",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-all",
+            "properties": {
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",  # ⚠️ TRIGGER: любой источник
+              "destinationAddressPrefix": "*",  # ⚠️ TRIGGER: любое назначение
+              "sourcePortRange": "*",  # ⚠️ TRIGGER: любой порт
+              "destinationPortRange": "*",  # ⚠️ TRIGGER: любой порт
+              "protocol": "*"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+---
+# ✅ SECURE: NSG с конкретными правилами
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2022-05-01",
+      "name": "secure-nsg",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-https",
+            "properties": {
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "10.0.0.0/24",
+              "destinationAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "protocol": "Tcp"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

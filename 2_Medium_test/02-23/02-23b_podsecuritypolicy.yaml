@@ -1,0 +1,23 @@
+# ❌ VULNERABLE: PSP отсутствует или слишком разрешающий
+# (PSP deprecated в K8s 1.25+, используем Pod Security Admission)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: vulnerable-psp
+spec:
+  privileged: true  # ⚠️ TRIGGER: разрешает privileged
+  hostNetwork: true
+  hostPID: true
+  volumes:
+  - '*'
+
+---
+# ✅ SECURE: Ограничивающий PSP или PSA label
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-namespace
+  labels:
+    pod-security.kubernetes.io/enforce: restricted  # ✅ OK: PSA label
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

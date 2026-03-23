@@ -1,0 +1,39 @@
+# ❌ VULNERABLE: Key policy без условий для cross-account
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  KeyPolicyDocument:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowCrossAccount
+          Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::999999999999:root  # ⚠️ TRIGGER: другой аккаунт
+          Action: "kms:*"
+          Resource: "*"
+          # ⚠️ TRIGGER: отсутствует Condition для ограничения
+
+---
+# ✅ SECURE: Key policy с условиями для cross-account
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureKeyPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowCrossAccount
+          Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::999999999999:root
+          Action:
+          - "kms:Decrypt"
+          - "kms:GenerateDataKey"
+          Resource: "*"
+          Condition:
+            StringEquals:
+              kms:CallerAccount: "999999999999"  # ✅ Проверка аккаунта
+              kms:ViaService: "s3.amazonaws.com"  # ✅ Ограничение по сервису

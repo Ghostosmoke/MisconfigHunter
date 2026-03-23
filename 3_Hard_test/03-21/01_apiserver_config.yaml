@@ -1,0 +1,45 @@
+# ❌ VULNERABLE: Audit log path writable by container
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-apiserver
+    image: k8s.gcr.io/kube-apiserver:v1.28.0
+    command:
+    - kube-apiserver
+    - --audit-log-path=/var/log/kubernetes/audit.log
+    volumeMounts:
+    - name: audit-log
+      mountPath: /var/log/kubernetes
+  volumes:
+  - name: audit-log
+    hostPath:
+      path: /var/log/kubernetes  # ⚠️ TRIGGER: writable path
+      type: DirectoryOrCreate
+
+---
+# ✅ SECURE: Audit log в защищённом месте
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - name: kube-apiserver
+    image: k8s.gcr.io/kube-apiserver:v1.28.0
+    command:
+    - kube-apiserver
+    - --audit-log-path=/var/log/kubernetes/audit.log
+    volumeMounts:
+    - name: audit-log
+      mountPath: /var/log/kubernetes
+      readOnly: true  # ✅ Только чтение
+  volumes:
+  - name: audit-log
+    hostPath:
+      path: /var/log/kubernetes
+      type: Directory

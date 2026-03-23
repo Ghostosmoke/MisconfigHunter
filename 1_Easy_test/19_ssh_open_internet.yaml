@@ -1,0 +1,26 @@
+# ❌ VULNERABLE: Security group allows SSH from 0.0.0.0/0
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH from anywhere
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22  # ⚠️ TRIGGER: SSH port
+        ToPort: 22
+        CidrIp: 0.0.0.0/0  # ⚠️ TRIGGER: open to internet
+
+---
+# ✅ SECURE: SSH restricted to specific IP or VPN
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH from bastion only
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 10.0.0.0/8  # ✅ OK: internal network only

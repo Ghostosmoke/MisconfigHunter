@@ -1,0 +1,37 @@
+# ❌ VULNERABLE: Elasticsearch с публичным доступом
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VulnerableES:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      DomainName: production-logs
+      AccessPolicies:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: "*"  # ⚠️ TRIGGER: любой principal
+          Action: "es:*"
+          Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/production-logs/*"
+
+---
+# ✅ SECURE: Elasticsearch с ограниченным доступом
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SecureES:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      DomainName: production-logs
+      AccessPolicies:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::123456789012:role/app-role  # ✅ OK: конкретная роль
+          Action: "es:ESHttpGet"
+          Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/production-logs/*"
+      VPCOptions:
+        SubnetIds:
+        - subnet-123456
+        SecurityGroupIds:
+        - sg-123456

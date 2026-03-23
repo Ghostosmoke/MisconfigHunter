@@ -1,0 +1,18 @@
+# ❌ VULNERABLE: Policy не требует обязательных тегов
+taggingPolicy:
+  requiredTags: []  # ⚠️ TRIGGER: пустой список
+  enforce: false
+
+---
+# ✅ SECURE: Policy требует обязательные теги
+taggingPolicy:
+  requiredTags:
+    - owner
+    - cost-center
+    - env
+  enforce: true  # ✅ Блокирует создание без тегов
+  allowedValues:
+    env:
+      - development
+      - staging
+      - production

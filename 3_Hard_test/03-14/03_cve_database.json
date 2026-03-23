@@ -1,0 +1,11 @@
+{
+  "image": "ubuntu:20.04",
+  "vulnerabilities": [
+    {
+      "cveId": "CVE-2023-1234",
+      "severity": "CRITICAL",
+      "package": "openssl",
+      "fixedVersion": "1.1.1f-1ubuntu2.19"
+    }
+  ]
+}
