@@ -1,0 +1,422 @@
+=== Иерархическая сортировка (папки → файлы) ===
+
+
+1_Easy_test/
+   01_privileged_container.yaml
+   02_run_as_root.yaml
+   03_latest_tag.yaml
+   04_host_network.yaml
+   05_host_pid.yaml
+   06_host_ipc.yaml
+   07_allow_privilege_escalation.yaml
+   08_docker_exposed_ports.yaml
+   09_docker_privileged.yaml
+   1.yml
+   10_secrets_in_env.yaml
+   11_missing_resource_limits.yaml
+   12_missing_health_probes.yaml
+   13_insecure_capabilities.yaml
+   14_docker_latest_tag.yaml
+   15_s3_public_read.yaml
+   16_s3_public_write.yaml
+   17_unencrypted_ebs.yaml
+   18_rdp_open_internet.yaml
+   19_ssh_open_internet.yaml
+   20_gcs_public.yaml
+   21_azure_storage_public.yaml
+   22_dashboard_exposed.yaml
+   23_etcd_client_cert.yaml
+   24_anonymous_auth.yaml
+   25_cicd_plaintext_secrets.yaml
+
+2_Medium_test/02-01/
+   02-01a_pod_without_networkpolicy.yaml
+   02-01b_empty_networkpolicy.yaml
+
+2_Medium_test/02-02/
+   02-02a_pod_with_sa.yaml
+   02-02b_serviceaccount.yaml
+
+2_Medium_test/02-03/
+   02-03a_pod_with_images.yaml
+   02-03b_registry_allowlist.yaml
+
+2_Medium_test/02-04/
+   02-04_ingress_without_tls.yaml
+
+2_Medium_test/02-05/
+   02-05_loadbalancer_internal.yaml
+
+2_Medium_test/02-06/
+   02-06_security_group_permissive.yaml
+
+2_Medium_test/02-07/
+   02-07_iam_policy_wildcard.yaml
+
+2_Medium_test/02-08/
+   02-08_kms_key_rotation.yaml
+
+2_Medium_test/02-09/
+   02-09_cloudtrail_logging.yaml
+
+2_Medium_test/02-10/
+   02-10a_vpc_without_flowlogs.yaml
+   02-10b_flowlog_resource.yaml
+
+2_Medium_test/02-11/
+   02-11_rds_publicly_accessible.yaml
+
+2_Medium_test/02-12/
+   02-12_rds_encryption.yaml
+
+2_Medium_test/02-13/
+   02-13_redis_config.yaml
+
+2_Medium_test/02-14/
+   02-14_mongodb_config.yaml
+
+2_Medium_test/02-15/
+   02-15_elasticsearch_access.yaml
+
+2_Medium_test/02-16/
+   02-16a_lambda_function.yaml
+   02-16b_lambda_permission.yaml
+
+2_Medium_test/02-17/
+   02-17a_cloud_function.yaml
+   02-17b_function_iam.yaml
+
+2_Medium_test/02-18/
+   02-18_azure_nsg.yaml
+
+2_Medium_test/02-19/
+   02-19_azure_sql_firewall.yaml
+
+2_Medium_test/02-20/
+   02-20_gitlab_pipeline.yaml
+
+2_Medium_test/02-21/
+   02-21_github_actions.yaml
+
+2_Medium_test/02-22/
+   02-22_docker_socket.yaml
+
+2_Medium_test/02-23/
+   02-23a_pod.yaml
+   02-23b_podsecuritypolicy.yaml
+
+2_Medium_test/02-24/
+   02-24a_values.yaml
+   02-24b_values_schema.json
+
+2_Medium_test/02-25/
+   02-25a_backend.tf
+   02-25b_dynamodb.tf
+
+3_Hard_test/03-01/
+   01_pod.yaml
+   02_service.yaml
+   03_ingress.yaml
+   04_networkpolicy.yaml
+
+3_Hard_test/03-02/
+   01_iam_user.yaml
+   02_policy_passrole.yaml
+   03_policy_createpolicy.yaml
+
+3_Hard_test/03-03/
+   01_pod.yaml
+   02_serviceaccount.yaml
+   03_rolebinding.yaml
+
+3_Hard_test/03-04/
+   01_ec2_instance.yaml
+   02_iam_role.yaml
+   03_s3_bucket.yaml
+   04_lambda_function.yaml
+   05_resource_policy.yaml
+
+3_Hard_test/03-05/
+   01_secret.yaml
+   02_rotation_policy.yaml
+
+3_Hard_test/03-06/
+   01_iam_user.yaml
+   02_access_key.yaml
+   03_cloudtrail_events.json
+   03b_cloudtrail_activity.json
+
+3_Hard_test/03-07/
+   01_clusterrole.yaml
+   02_clusterrolebinding.yaml
+
+3_Hard_test/03-08/
+   01_rolebinding.yaml
+   02_serviceaccount.yaml
+
+3_Hard_test/03-09/
+   01_apiserver_config.yaml
+   02_admission_plugins.yaml
+
+3_Hard_test/03-10/
+   01_pod.yaml
+   02_hostpath_volume.yaml
+
+3_Hard_test/03-11/
+   01a_main_vulnerable.tf
+   01b_main_secure.tf
+   02a_variables_vulnerable.tf
+   02b_variables_secure.tf
+   03a_terraform_vulnerable.tfvars
+   03b_terraform_secure.tfvars
+
+3_Hard_test/03-12/
+   01_backend.tf
+   02a_s3_bucket_vulnerable.tf
+   02b_s3_bucket_secure.tf
+   03a_bucket_policy_vulnerable.tf
+   03b_bucket_policy_secure.tf
+
+3_Hard_test/03-13/
+   01_pipeline.yaml
+   02_webhook_config.yaml
+
+3_Hard_test/03-14/
+   02_base_image.yaml
+   03_cve_database.json
+
+3_Hard_test/03-15/
+   01_image_deployment.yaml
+   02_admission_policy.yaml
+   03_signature_verification.yaml
+
+3_Hard_test/03-16/
+   01_resources.yaml
+   02_tagging_policy.yaml
+
+3_Hard_test/03-17/
+   01_kms_key.yaml
+   02_key_policy.yaml
+
+3_Hard_test/03-18/
+   01_vpc_a.yaml
+   02_vpc_b.yaml
+   03_peering_connection.yaml
+   04_route_tables.yaml
+
+3_Hard_test/03-19/
+   01_azure_user.yaml
+   02_pim_policy.yaml
+
+3_Hard_test/03-20/
+   01_service_account.yaml
+   02_sa_key.yaml
+   03_key_rotation_policy.yaml
+
+3_Hard_test/03-21/
+   01_apiserver_config.yaml
+   02_host_volume.yaml
+
+3_Hard_test/03-22/
+   01_registry_config.yaml
+   02_access_policy.yaml
+
+3_Hard_test/03-23/
+   01_api_gateway.yaml
+   02_lambda_function.yaml
+   03_dynamodb_table.yaml
+   04_sns_topic.yaml
+
+3_Hard_test/03-24/
+   01_aws_trust_policy.yaml
+   02_azure_trust_policy.yaml
+   03_federation_policy.yaml
+
+3_Hard_test/03-25/
+   01_terraform_state.json
+   02_live_scan.json
+   03a_drift_detected.json
+   03b_drift_clean.json
+
+Test_find_yaml/1/0/
+   1.yaml
+
+Test_find_yaml/2/0/
+   1.yaml
+
+Test_find_yaml/2/1/
+   1.yaml
+
+Test_find_yaml/2/1/0/
+   1.yaml
+
+Test_find_yaml/3/0/
+   1.yaml
+
+Test_find_yaml/3/1/
+   1.yaml
+
+Test_find_yaml/3/1/0/
+   1.yaml
+
+Test_find_yaml/3/2/
+   1.yaml
+
+Test_find_yaml/3/2/0/
+   1.yaml
+
+Test_find_yaml/3/2/1/
+   1.yaml
+
+Test_find_yaml/3/2/1/0/
+   1.yaml
+
+
+=== Сортировка по размеру ===
+
+2_Medium_test/02-18/02-18_azure_nsg.yaml - 1691 байт
+2_Medium_test/02-24/02-24b_values_schema.json - 1585 байт
+3_Hard_test/03-18/04_route_tables.yaml - 1327 байт
+3_Hard_test/03-18/03_peering_connection.yaml - 1327 байт
+3_Hard_test/03-17/02_key_policy.yaml - 1289 байт
+3_Hard_test/03-23/02_lambda_function.yaml - 1277 байт
+2_Medium_test/02-15/02-15_elasticsearch_access.yaml - 1198 байт
+2_Medium_test/02-06/02-06_security_group_permissive.yaml - 1088 байт
+3_Hard_test/03-21/01_apiserver_config.yaml - 1085 байт
+3_Hard_test/03-23/04_sns_topic.yaml - 1083 байт
+2_Medium_test/02-07/02-07_iam_policy_wildcard.yaml - 1070 байт
+3_Hard_test/03-04/05_resource_policy.yaml - 1045 байт
+2_Medium_test/02-08/02-08_kms_key_rotation.yaml - 1026 байт
+2_Medium_test/02-19/02-19_azure_sql_firewall.yaml - 1022 байт
+3_Hard_test/03-02/03_policy_createpolicy.yaml - 1008 байт
+3_Hard_test/03-23/03_dynamodb_table.yaml - 1005 байт
+3_Hard_test/03-05/02_rotation_policy.yaml - 985 байт
+3_Hard_test/03-24/01_aws_trust_policy.yaml - 980 байт
+1_Easy_test/21_azure_storage_public.yaml - 970 байт
+3_Hard_test/03-05/01_secret.yaml - 924 байт
+2_Medium_test/02-04/02-04_ingress_without_tls.yaml - 920 байт
+2_Medium_test/02-09/02-09_cloudtrail_logging.yaml - 913 байт
+3_Hard_test/03-22/01_registry_config.yaml - 903 байт
+3_Hard_test/03-16/01_resources.yaml - 862 байт
+2_Medium_test/02-11/02-11_rds_publicly_accessible.yaml - 844 байт
+3_Hard_test/03-21/02_host_volume.yaml - 843 байт
+2_Medium_test/02-01/02-01b_empty_networkpolicy.yaml - 842 байт
+2_Medium_test/02-10/02-10b_flowlog_resource.yaml - 836 байт
+2_Medium_test/02-05/02-05_loadbalancer_internal.yaml - 799 байт
+1_Easy_test/25_cicd_plaintext_secrets.yaml - 794 байт
+1_Easy_test/10_secrets_in_env.yaml - 789 байт
+2_Medium_test/02-16/02-16a_lambda_function.yaml - 781 байт
+1_Easy_test/18_rdp_open_internet.yaml - 780 байт
+1_Easy_test/19_ssh_open_internet.yaml - 776 байт
+3_Hard_test/03-15/02_admission_policy.yaml - 775 байт
+3_Hard_test/03-10/01_pod.yaml - 774 байт
+2_Medium_test/02-12/02-12_rds_encryption.yaml - 767 байт
+3_Hard_test/03-19/02_pim_policy.yaml - 730 байт
+2_Medium_test/02-16/02-16b_lambda_permission.yaml - 727 байт
+2_Medium_test/02-17/02-17a_cloud_function.yaml - 723 байт
+3_Hard_test/03-15/01_image_deployment.yaml - 719 байт
+1_Easy_test/24_anonymous_auth.yaml - 700 байт
+2_Medium_test/02-21/02-21_github_actions.yaml - 696 байт
+2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml - 693 байт
+3_Hard_test/03-23/01_api_gateway.yaml - 682 байт
+3_Hard_test/03-19/01_azure_user.yaml - 680 байт
+2_Medium_test/02-14/02-14_mongodb_config.yaml - 675 байт
+1_Easy_test/13_insecure_capabilities.yaml - 669 байт
+2_Medium_test/02-02/02-02a_pod_with_sa.yaml - 668 байт
+2_Medium_test/02-17/02-17b_function_iam.yaml - 666 байт
+1_Easy_test/23_etcd_client_cert.yaml - 662 байт
+1_Easy_test/15_s3_public_read.yaml - 657 байт
+2_Medium_test/02-03/02-03a_pod_with_images.yaml - 654 байт
+3_Hard_test/03-25/03a_drift_detected.json - 651 байт
+1_Easy_test/20_gcs_public.yaml - 638 байт
+2_Medium_test/02-20/02-20_gitlab_pipeline.yaml - 636 байт
+1_Easy_test/12_missing_health_probes.yaml - 634 байт
+2_Medium_test/02-24/02-24a_values.yaml - 633 байт
+3_Hard_test/03-20/02_sa_key.yaml - 632 байт
+1_Easy_test/22_dashboard_exposed.yaml - 626 байт
+2_Medium_test/02-22/02-22_docker_socket.yaml - 622 байт
+2_Medium_test/02-23/02-23a_pod.yaml - 618 байт
+3_Hard_test/03-04/04_lambda_function.yaml - 614 байт
+3_Hard_test/03-24/02_azure_trust_policy.yaml - 614 байт
+2_Medium_test/02-25/02-25a_backend.tf - 613 байт
+1_Easy_test/16_s3_public_write.yaml - 594 байт
+3_Hard_test/03-09/01_apiserver_config.yaml - 594 байт
+3_Hard_test/03-03/03_rolebinding.yaml - 580 байт
+3_Hard_test/03-22/02_access_policy.yaml - 578 байт
+3_Hard_test/03-25/01_terraform_state.json - 571 байт
+3_Hard_test/03-09/02_admission_plugins.yaml - 569 байт
+3_Hard_test/03-01/04_networkpolicy.yaml - 568 байт
+3_Hard_test/03-07/02_clusterrolebinding.yaml - 566 байт
+1_Easy_test/03_latest_tag.yaml - 558 байт
+2_Medium_test/02-10/02-10a_vpc_without_flowlogs.yaml - 558 байт
+3_Hard_test/03-08/01_rolebinding.yaml - 558 байт
+3_Hard_test/03-04/03_s3_bucket.yaml - 556 байт
+3_Hard_test/03-13/02_webhook_config.yaml - 555 байт
+2_Medium_test/02-13/02-13_redis_config.yaml - 544 байт
+3_Hard_test/03-14/02_base_image.yaml - 541 байт
+1_Easy_test/01_privileged_container.yaml - 534 байт
+1_Easy_test/17_unencrypted_ebs.yaml - 532 байт
+1_Easy_test/07_allow_privilege_escalation.yaml - 526 байт
+1_Easy_test/11_missing_resource_limits.yaml - 526 байт
+2_Medium_test/02-02/02-02b_serviceaccount.yaml - 524 байт
+3_Hard_test/03-04/02_iam_role.yaml - 518 байт
+1_Easy_test/02_run_as_root.yaml - 503 байт
+2_Medium_test/02-25/02-25b_dynamodb.tf - 498 байт
+3_Hard_test/03-16/02_tagging_policy.yaml - 480 байт
+1_Easy_test/08_docker_exposed_ports.yaml - 474 байт
+3_Hard_test/03-12/03b_bucket_policy_secure.tf - 473 байт
+3_Hard_test/03-10/02_hostpath_volume.yaml - 433 байт
+3_Hard_test/03-24/03_federation_policy.yaml - 429 байт
+3_Hard_test/03-12/03a_bucket_policy_vulnerable.tf - 421 байт
+1_Easy_test/04_host_network.yaml - 419 байт
+1_Easy_test/06_host_ipc.yaml - 411 байт
+1_Easy_test/05_host_pid.yaml - 410 байт
+3_Hard_test/03-20/03_key_rotation_policy.yaml - 399 байт
+1_Easy_test/14_docker_latest_tag.yaml - 398 байт
+3_Hard_test/03-13/01_pipeline.yaml - 380 байт
+3_Hard_test/03-07/01_clusterrole.yaml - 374 байт
+3_Hard_test/03-02/02_policy_passrole.yaml - 369 байт
+1_Easy_test/09_docker_privileged.yaml - 358 байт
+3_Hard_test/03-06/01_iam_user.yaml - 353 байт
+3_Hard_test/03-15/03_signature_verification.yaml - 349 байт
+3_Hard_test/03-11/01b_main_secure.tf - 347 байт
+3_Hard_test/03-12/02b_s3_bucket_secure.tf - 343 байт
+3_Hard_test/03-02/01_iam_user.yaml - 336 байт
+3_Hard_test/03-11/03b_terraform_secure.tfvars - 332 байт
+3_Hard_test/03-01/03_ingress.yaml - 314 байт
+3_Hard_test/03-04/01_ec2_instance.yaml - 311 байт
+3_Hard_test/03-11/01a_main_vulnerable.tf - 307 байт
+3_Hard_test/03-17/01_kms_key.yaml - 288 байт
+3_Hard_test/03-11/02a_variables_vulnerable.tf - 286 байт
+3_Hard_test/03-25/02_live_scan.json - 279 байт
+3_Hard_test/03-18/01_vpc_a.yaml - 271 байт
+3_Hard_test/03-06/03b_cloudtrail_activity.json - 268 байт
+2_Medium_test/02-03/02-03b_registry_allowlist.yaml - 265 байт
+3_Hard_test/03-12/01_backend.tf - 262 байт
+3_Hard_test/03-12/02a_s3_bucket_vulnerable.tf - 254 байт
+3_Hard_test/03-06/02_access_key.yaml - 253 байт
+3_Hard_test/03-11/02b_variables_secure.tf - 243 байт
+2_Medium_test/02-01/02-01a_pod_without_networkpolicy.yaml - 238 байт
+3_Hard_test/03-08/02_serviceaccount.yaml - 205 байт
+3_Hard_test/03-03/01_pod.yaml - 202 байт
+3_Hard_test/03-14/03_cve_database.json - 202 байт
+3_Hard_test/03-20/01_service_account.yaml - 200 байт
+3_Hard_test/03-01/01_pod.yaml - 197 байт
+3_Hard_test/03-18/02_vpc_b.yaml - 187 байт
+3_Hard_test/03-01/02_service.yaml - 172 байт
+3_Hard_test/03-11/03a_terraform_vulnerable.tfvars - 166 байт
+3_Hard_test/03-03/02_serviceaccount.yaml - 116 байт
+3_Hard_test/03-25/03b_drift_clean.json - 86 байт
+1_Easy_test/1.yml - 26 байт
+3_Hard_test/03-06/03_cloudtrail_events.json - 19 байт
+Test_find_yaml/3/0/1.yaml - 0 байт
+Test_find_yaml/3/2/1.yaml - 0 байт
+Test_find_yaml/3/1/1.yaml - 0 байт
+Test_find_yaml/3/2/0/1.yaml - 0 байт
+Test_find_yaml/3/2/1/1.yaml - 0 байт
+Test_find_yaml/3/2/1/0/1.yaml - 0 байт
+Test_find_yaml/3/1/0/1.yaml - 0 байт
+Test_find_yaml/2/0/1.yaml - 0 байт
+Test_find_yaml/2/1/1.yaml - 0 байт
+Test_find_yaml/2/1/0/1.yaml - 0 байт
+Test_find_yaml/1/0/1.yaml - 0 байт
