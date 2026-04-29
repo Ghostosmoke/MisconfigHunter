@@ -1,0 +1,163 @@
+1_Easy_test/01_privileged_container.yaml# ❌ VULNERABLE: Container runs with privileged: true
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      privileged: true  # ⚠️ TRIGGER: privileged mode enabled
+
+---
+# ✅ SECURE: Privileged mode explicitly disabled
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24
+    securityContext:
+      privileged: false  # ✅ OK: explicitly disabled
+      allowPrivilegeEscalation: false
+==================================================
+
+
+
+
+1_Easy_test/09_docker_privileged.yaml# ❌ VULNERABLE: Service runs in privileged mode
+version: '3.8'
+services:
+  app:
+    image: nginx:1.24
+    privileged: true  # ⚠️ TRIGGER: privileged container
+
+---
+# ✅ SECURE: Privileged mode disabled
+version: '3.8'
+services:
+  app:
+    image: nginx:1.24
+    privileged: false  # ✅ OK: explicitly disabled
+    # Or omit entirely - defaults to false
+==================================================
+
+
+
+
+2_Medium_test/02-23/02-23a_pod.yaml# ❌ VULNERABLE: Pod без привязки к PSP
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-pod
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: true
+  # ⚠️ TRIGGER: нет serviceAccount с привязкой к PSP
+
+---
+# ✅ SECURE: Pod с правильным ServiceAccount
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+  namespace: default
+spec:
+  serviceAccountName: restricted-sa
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+==================================================
+
+
+
+
+2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml# ❌ VULNERABLE: PSP отсутствует или слишком разрешающий
+# (PSP deprecated в K8s 1.25+, используем Pod Security Admission)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: vulnerable-psp
+spec:
+  privileged: true  # ⚠️ TRIGGER: разрешает privileged
+  hostNetwork: true
+  hostPID: true
+  volumes:
+  - '*'
+
+---
+# ✅ SECURE: Ограничивающий PSP или PSA label
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-namespace
+  labels:
+    pod-security.kubernetes.io/enforce: restricted  # ✅ OK: PSA label
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+==================================================
+
+
+
+
+3_Hard_test/03-10/01_pod.yaml# ❌ VULNERABLE
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vulnerable-breakout
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: true
+      capabilities:
+        add:
+        - SYS_ADMIN
+    volumeMounts:
+    - name: host-root
+      mountPath: /host
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+
+---
+# ✅ SECURE
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-container
+  namespace: default
+spec:
+  containers:
+  - name: app
+    image: nginx:1.24.0
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+    volumeMounts:
+    - name: app-data
+      mountPath: /data
+  volumes:
+  - name: app-data
+    emptyDir: {}
+==================================================
+
+
+
+
