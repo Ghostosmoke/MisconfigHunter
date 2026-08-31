@@ -37881,3 +37881,4738 @@
 
 
 
+1_Easy_test/06_host_ipc.yaml
+
+⚠️  [HIGH] Host IPC
+📍 Найдено проблем: 1
+    Строка 7: hostIPC: true  # ⚠️ TRIGGER: host IPC namespace
+
+💥 Issue: Контейнер использует пространство IPC хоста.
+🎯 Risk: Доступ к shared memory хоста, возможность перехвата данных между процессами на узле, атаки типа race condition.
+❌ Insecure:
+    spec:
+      hostIPC: true
+✅ Secure:
+    spec:
+      hostIPC: false
+🛠️ Remediation:
+    • Установите hostIPC: false
+    • Изолируйте межпроцессное взаимодействие
+    • Используйте стандартные механизмы IPC Kubernetes
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/06_host_ipc.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/06_host_ipc.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 21: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/06_host_ipc.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/06_host_ipc.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 21: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/24_anonymous_auth.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/24_anonymous_auth.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: kube-apiserver  ← container 'kube-apiserver' missing limits: cpu, memory
+    Строка 24: - name: kube-apiserver  ← container 'kube-apiserver' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/24_anonymous_auth.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/24_anonymous_auth.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: kube-apiserver  ← container 'kube-apiserver' missing probes: livenessProbe, readinessProbe
+    Строка 24: - name: kube-apiserver  ← container 'kube-apiserver' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/24_anonymous_auth.yaml
+
+⚠️  [CRITICAL] Anonymous Auth Enabled
+📁 Файл: 1_Easy_test/24_anonymous_auth.yaml
+📍 Найдено проблем: 1
+    Строка 13: - --anonymous-auth=true  ← anonymous auth enabled
+
+💥 Issue: Разрешена анонимная аутентификация Kubernetes API Server.
+🎯 Risk: Неаутентифицированные запросы к API, возможность разведки кластера или эксплуатации уязвимостей.
+❌ Insecure:
+    kube-apiserver:
+        --anonymous-auth=true
+✅ Secure:
+    kube-apiserver:
+        --anonymous-auth=false
+        --authorization-mode=Node,RBAC
+🛠️ Remediation:
+    • Установите --anonymous-auth=false
+    • Проверьте все API Server конфигурации
+    • Включите RBAC authorization mode
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/04_host_network.yaml
+
+⚠️  [HIGH] Host Network
+📍 Найдено проблем: 1
+    Строка 7: hostNetwork: true  # ⚠️ TRIGGER: host network enabled
+
+💥 Issue: Контейнер использует сетевой стек хоста.
+🎯 Risk: Доступ ко всем сетевым интерфейсам хоста, сниффинг трафика, обход NetworkPolicies, доступ к сервисам на localhost хоста.
+❌ Insecure:
+    spec:
+      hostNetwork: true
+✅ Secure:
+    spec:
+      hostNetwork: false
+🛠️ Remediation:
+    • Установите hostNetwork: false
+    • Используйте стандартную сеть Kubernetes
+    • Настройте NetworkPolicy для контроля трафика
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/04_host_network.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/04_host_network.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 21: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/04_host_network.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/04_host_network.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 21: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/14_docker_latest_tag.yaml
+
+⚠️  [MEDIUM] Docker Latest Tag
+📁 Файл: 1_Easy_test/14_docker_latest_tag.yaml
+📍 Найдено проблем: 2
+    Строка 5: nginx  ← тег отсутствует (по умолчанию latest)
+    Строка 7: nginx:latest  ← явный тег :latest
+
+💥 Issue: Использование тега latest в Docker Compose.
+🎯 Risk: Невозможность воспроизведения окружения, риск получения битой или уязвимой версии при пересоздании.
+❌ Insecure:
+    services:
+        web:
+            image: nginx
+            # или image: nginx:latest
+✅ Secure:
+    services:
+        web:
+            image: nginx:1.21.0
+🛠️ Remediation:
+    • Всегда указывайте конкретную версию образа
+    • Используйте SHA-хеш для production
+    • Настройте Dependabot для обновления образов
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/12_missing_health_probes.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/12_missing_health_probes.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 20: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/02_run_as_root.yaml
+
+⚠️  [HIGH] Run as Root
+📁 Файл: 1_Easy_test/02_run_as_root.yaml
+📍 Найдено проблем: 1
+    Строка 11: runAsUser: 0  # ⚠️ TRIGGER: explicit root  ← runAsUser: 0
+
+💥 Issue: Процессы внутри контейнера выполняются от имени root.
+🎯 Risk: При уязвимости в приложении злоумышленник получит права root внутри контейнера, что облегчает выход за пределы контейнера.
+❌ Insecure:
+    securityContext:
+      runAsUser: 0
+    # или отсутствие runAsNonRoot
+✅ Secure:
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+🛠️ Remediation:
+    • Установите runAsNonRoot: true
+    • Укажите конкретного пользователя runAsUser: 1000
+    • Добавьте runAsGroup для групповых разрешений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/02_run_as_root.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/02_run_as_root.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 24: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/02_run_as_root.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/02_run_as_root.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 24: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/07_allow_privilege_escalation.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/07_allow_privilege_escalation.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 21: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/07_allow_privilege_escalation.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/07_allow_privilege_escalation.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 21: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/22_dashboard_exposed.yaml
+
+⚠️  [CRITICAL] Kubernetes Dashboard Exposed
+📁 Файл: 1_Easy_test/22_dashboard_exposed.yaml
+📍 Найдено проблем: 1
+    Строка 8: type: LoadBalancer  # ⚠️ TRIGGER: publicly exposed  ← dashboard service 'kubernetes-dashboard' exposed via LoadBalancer
+
+💥 Issue: Панель управления K8s доступна извне через LoadBalancer.
+🎯 Risk: Если авторизация слабая, злоумышленник получит полный контроль над кластером.
+❌ Insecure:
+    apiVersion: v1
+    kind: Service
+    metadata:
+        name: kubernetes-dashboard
+    spec:
+        type: LoadBalancer
+✅ Secure:
+    apiVersion: v1
+    kind: Service
+    metadata:
+        name: kubernetes-dashboard
+    spec:
+        type: ClusterIP
+🛠️ Remediation:
+    • Измените тип Service на ClusterIP
+    • Настройте доступ через kubectl proxy
+    • Или используйте Ingress с OAuth/OIDC
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/01_privileged_container.yaml
+
+⚠️  [CRITICAL] Privileged Container
+📁 Файл: 1_Easy_test/01_privileged_container.yaml
+📍 Найдено проблем: 1
+    Строка 11: privileged: true  # ⚠️ TRIGGER: privileged mode enabled
+
+💥 Issue: Контейнер имеет почти полный доступ к хост-системе.
+🎯 Risk: Злоумышленник может получить полный контроль над узлом.
+❌ Insecure:
+    securityContext:
+      privileged: true
+✅ Secure:
+    securityContext:
+      privileged: false
+🛠️ Remediation:
+    • Установите privileged: false
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/01_privileged_container.yaml
+
+⚠️  [CRITICAL] Docker Privileged
+📁 Файл: 1_Easy_test/01_privileged_container.yaml
+📍 Найдено проблем: 1
+    Строка 11: privileged: true  # ⚠️ TRIGGER: privileged mode enabled
+
+💥 Issue: Контейнер запущен в привилегированном режиме Docker.
+🎯 Risk: Полный доступ к устройствам хоста, возможность загрузки модулей ядра, обход изоляции, container escape.
+❌ Insecure:
+    services:
+        app:
+            image: myapp
+            privileged: true  # ❌ Опасно!
+✅ Secure:
+    services:
+        app:
+            image: myapp
+            privileged: false
+            cap_add:
+                - NET_BIND_SERVICE
+            security_opt:
+                - no-new-privileges:true
+            read_only: true
+🛠️ Remediation:
+    • Установите privileged: false
+    • Используйте cap_add только для необходимых capabilities
+    • Добавьте security_opt: no-new-privileges:true
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/01_privileged_container.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/01_privileged_container.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 21: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/01_privileged_container.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/01_privileged_container.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 21: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/10_secrets_in_env.yaml
+
+⚠️  [HIGH] Secrets in Env Vars
+📁 Файл: 1_Easy_test/10_secrets_in_env.yaml
+📍 Найдено проблем: 2
+    Строка 12: value: "supersecret123"
+    Строка 14: value: "sk-abc123"
+
+💥 Issue: Секреты хранятся в переменных окружения в открытом виде.
+🎯 Risk: Секреты видны через kubectl describe, docker inspect, могут попасть в логи систем мониторинга или отладки.
+❌ Insecure:
+    env:
+        - name: DB_PASSWORD
+          value: "super_secret_password"
+        - name: API_KEY
+          value: "sk-1234567890abcdef"
+✅ Secure:
+    envFrom:
+        secretRef:
+            name: app-secrets
+🛠️ Remediation:
+    • Используйте Kubernetes Secrets вместо plaintext values
+    • Монтируйте секреты как файлы с readOnly: true
+    • Включите encryption at rest для etcd
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/10_secrets_in_env.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/10_secrets_in_env.yaml
+📍 Найдено проблем: 3
+    Строка 8: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 24: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 27: - name: DB_PASSWORD  ← container 'DB_PASSWORD' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/10_secrets_in_env.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/10_secrets_in_env.yaml
+📍 Найдено проблем: 3
+    Строка 8: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 24: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 27: - name: DB_PASSWORD  ← container 'DB_PASSWORD' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/21_azure_storage_public.yaml
+
+⚠️  [CRITICAL] Azure Storage Public
+📁 Файл: 1_Easy_test/21_azure_storage_public.yaml
+📍 Найдено проблем: 1
+    Строка 10: "allowBlobPublicAccess": true,  ← allowBlobPublicAccess: true
+
+💥 Issue: Уровень доступа Azure Storage установлен в публичный.
+🎯 Risk: Чтение данных любым пользователем интернета, утечка конфиденциальной информации, compliance violations.
+❌ Insecure:
+    properties:
+        publicAccess: Blob
+✅ Secure:
+    properties:
+        publicAccess: None
+🛠️ Remediation:
+    • Установите publicAccess: None
+    • Включите 'Allow Blob anonymous access' = Disabled
+    • Используйте SAS tokens с ограниченным временем жизни
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/15_s3_public_read.yaml
+
+⚠️  [CRITICAL] S3 Public Read
+📁 Файл: 1_Easy_test/15_s3_public_read.yaml
+📍 Найдено проблем: 1
+    Строка 7: AccessControl: PublicRead  # ⚠️ TRIGGER: public read ACL  ← public read ACL
+
+💥 Issue: S3 bucket настроен с ACL для публичного чтения.
+🎯 Risk: Данные в bucket могут быть доступны любому пользователю в интернете, что ведёт к утечке конфиденциальной информации.
+❌ Insecure:
+    Resources:
+      VulnerableBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+          AccessControl: PublicRead
+✅ Secure:
+    Resources:
+      SecureBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+          AccessControl: Private
+🛠️ Remediation:
+    • Замените AccessControl: PublicRead на private ACL
+    • Включите S3 Block Public Access
+    • Проверьте bucket policy и IAM-доступ отдельно от ACL
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/09_docker_privileged.yaml
+
+⚠️  [CRITICAL] Privileged Container
+📁 Файл: 1_Easy_test/09_docker_privileged.yaml
+📍 Найдено проблем: 1
+    Строка 6: privileged: true  # ⚠️ TRIGGER: privileged container
+
+💥 Issue: Контейнер имеет почти полный доступ к хост-системе.
+🎯 Risk: Злоумышленник может получить полный контроль над узлом.
+❌ Insecure:
+    securityContext:
+      privileged: true
+✅ Secure:
+    securityContext:
+      privileged: false
+🛠️ Remediation:
+    • Установите privileged: false
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/09_docker_privileged.yaml
+
+⚠️  [CRITICAL] Docker Privileged
+📁 Файл: 1_Easy_test/09_docker_privileged.yaml
+📍 Найдено проблем: 1
+    Строка 6: privileged: true  # ⚠️ TRIGGER: privileged container
+
+💥 Issue: Контейнер запущен в привилегированном режиме Docker.
+🎯 Risk: Полный доступ к устройствам хоста, возможность загрузки модулей ядра, обход изоляции, container escape.
+❌ Insecure:
+    services:
+        app:
+            image: myapp
+            privileged: true  # ❌ Опасно!
+✅ Secure:
+    services:
+        app:
+            image: myapp
+            privileged: false
+            cap_add:
+                - NET_BIND_SERVICE
+            security_opt:
+                - no-new-privileges:true
+            read_only: true
+🛠️ Remediation:
+    • Установите privileged: false
+    • Используйте cap_add только для необходимых capabilities
+    • Добавьте security_opt: no-new-privileges:true
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/25_cicd_plaintext_secrets.yaml
+
+⚠️  [CRITICAL] CI/CD Plain Text Secrets
+📁 Файл: 1_Easy_test/25_cicd_plaintext_secrets.yaml
+📍 Найдено проблем: 2
+    Строка 9: - export DB_PASSWORD="prod_secret_123"  # ⚠️ TRIGGER: plaintext secret  ← hardcoded secret in CI/CD script
+    Строка 10: - export API_KEY="sk-prod-abc123"  # ⚠️ TRIGGER: plaintext secret  ← hardcoded secret in CI/CD script
+
+💥 Issue: Секреты зашиты в код конфигурации CI/CD в открытом виде.
+🎯 Risk: Попадание секретов в git-историю, доступ к секретам у всех разработчиков с доступом к репозиторию.
+❌ Insecure:
+    # .gitlab-ci.yml
+    variables:
+        DB_PASSWORD: "hardcoded_password"  # ❌
+        API_KEY: "sk-1234567890abcdef"     # ❌
+✅ Secure:
+    # GitLab CI:
+        variables:
+            DB_PASSWORD: $SECURE_DB_PASSWORD  # ✅ Из CI/CD Variables
+    # GitHub Actions:
+        env:
+            PASSWORD: ${ secrets.DB_PASSWORD }  # ✅ Из Repository Secrets
+🛠️ Remediation:
+    • Удалите hardcoded secrets из CI/CD конфигурации
+    • Используйте GitLab CI/CD Variables или GitHub Actions Secrets
+    • Подключите внешний secret manager вместо literal values
+    • Ротируйте найденные секреты, если они уже использовались
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/17_unencrypted_ebs.yaml
+
+⚠️  [HIGH] Unencrypted EBS
+📁 Файл: 1_Easy_test/17_unencrypted_ebs.yaml
+📍 Найдено проблем: 1
+    Строка 8: Encrypted: false  # ⚠️ TRIGGER: encryption disabled  ← Encrypted: false
+
+💥 Issue: EBS volume не зашифрован.
+🎯 Risk: При физическом доступе к диску или снимке снапшота данные могут быть прочитаны в открытом виде.
+❌ Insecure:
+    Type: AWS::EC2::Volume
+        Properties:
+              Size: 100
+              Encrypted: false
+✅ Secure:
+    Type: AWS::EC2::Volume
+        Properties:
+              Size: 100
+              Encrypted: true
+              KmsKeyId: arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
+🛠️ Remediation:
+    • Включите шифрование для всех новых EBS volumes
+    • Настройте default encryption для региона
+    • Зашифруйте существующие volumes через snapshot copy
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/08_docker_exposed_ports.yaml
+
+⚠️  [HIGH] Docker Exposed Ports
+📁 Файл: 1_Easy_test/08_docker_exposed_ports.yaml
+📍 Найдено проблем: 2
+    Строка 7: - "0.0.0.0:80:80"
+    Строка 8: - "443:443"
+
+💥 Issue: Порт проброшен на все интерфейсы (0.0.0.0).
+🎯 Risk: Сервис становится доступным из внешней сети, увеличение поверхности атаки, доступ без авторизации.
+❌ Insecure:
+    ports:
+        - "0.0.0.0:80:80"
+        # Или без указания IP (подразумевается 0.0.0.0)
+        - "80:80"
+✅ Secure:
+    ports:
+        - "127.0.0.1:80:80"  # Только localhost
+        # Или использование overlay сети без публикации
+🛠️ Remediation:
+    • Укажите конкретный IP для binding (127.0.0.1)
+    • Используйте Docker networks для внутренней коммуникации
+    • Настройте reverse proxy для внешнего доступа
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/16_s3_public_write.yaml
+
+⚠️  [CRITICAL] S3 Public Write
+📁 Файл: 1_Easy_test/16_s3_public_write.yaml
+📍 Найдено проблем: 1
+    Строка 7: AccessControl: PublicReadWrite  # ⚠️ TRIGGER: public write ACL  ← public write ACL
+
+💥 Issue: S3 bucket настроен с ACL для публичной записи.
+🎯 Risk: Любой пользователь в интернете может загружать, изменять или перезаписывать объекты в bucket.
+❌ Insecure:
+    Resources:
+      VulnerableBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+          AccessControl: PublicReadWrite
+✅ Secure:
+    Resources:
+      SecureBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+          AccessControl: Private
+🛠️ Remediation:
+    • Замените AccessControl: PublicReadWrite на private ACL
+    • Включите S3 Block Public Access
+    • Ограничьте запись через IAM roles и bucket policies
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/11_missing_resource_limits.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/11_missing_resource_limits.yaml
+📍 Найдено проблем: 1
+    Строка 8: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/11_missing_resource_limits.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/11_missing_resource_limits.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 20: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/19_ssh_open_internet.yaml
+
+⚠️  [CRITICAL] SSH Open to Internet
+📁 Файл: 1_Easy_test/19_ssh_open_internet.yaml
+📍 Найдено проблем: 1
+    Строка 12: CidrIp: 0.0.0.0/0  # ⚠️ TRIGGER: open to internet  ← 0.0.0.0/0
+
+💥 Issue: Порт SSH (22) открыт для всего интернета.
+🎯 Risk: Постоянная атака ботнетов, брутфорс, утечка ключей, несанкционированный доступ.
+❌ Insecure:
+    SecurityGroupIngress:
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+✅ Secure:
+    SecurityGroupIngress:
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 10.0.0.0/8
+🛠️ Remediation:
+    • Используйте AWS Systems Manager Session Manager (без SSH)
+    • Ограничьте Security Group до конкретных IP
+    • Включите ключевую аутентификацию, отключите password auth
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/03_latest_tag.yaml
+
+⚠️  [MEDIUM] Latest Tag
+📍 Найдено проблем: 2
+    Строка 9: nginx:latest  ← явный тег :latest
+    Строка 11: nginx  ← тег отсутствует (по умолчанию latest)
+
+💥 Issue: Использование плавающего тега latest в образах.
+🎯 Risk: Непредсказуемые обновления, тихое внедрение уязвимостей.
+❌ Insecure:
+    image: nginx:latest
+    image: nginx
+✅ Secure:
+    image: nginx:1.24.0
+    image: nginx@sha256:abc123...
+🛠️ Remediation:
+    • Указывайте конкретную версию образа
+    • Используйте SHA-хеш для production
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/03_latest_tag.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/03_latest_tag.yaml
+📍 Найдено проблем: 4
+    Строка 8: - name: app-latest  ← container 'app-latest' missing limits: cpu, memory
+    Строка 10: - name: app-no-tag  ← container 'app-no-tag' missing limits: cpu, memory
+    Строка 21: - name: app-versioned  ← container 'app-versioned' missing limits: cpu, memory
+    Строка 23: - name: app-digest  ← container 'app-digest' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/03_latest_tag.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/03_latest_tag.yaml
+📍 Найдено проблем: 4
+    Строка 8: - name: app-latest  ← container 'app-latest' missing probes: livenessProbe, readinessProbe
+    Строка 10: - name: app-no-tag  ← container 'app-no-tag' missing probes: livenessProbe, readinessProbe
+    Строка 21: - name: app-versioned  ← container 'app-versioned' missing probes: livenessProbe, readinessProbe
+    Строка 23: - name: app-digest  ← container 'app-digest' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/13_insecure_capabilities.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/13_insecure_capabilities.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 25: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/13_insecure_capabilities.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/13_insecure_capabilities.yaml
+📍 Найдено проблем: 2
+    Строка 8: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 25: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/18_rdp_open_internet.yaml
+
+⚠️  [CRITICAL] RDP Open to Internet
+📁 Файл: 1_Easy_test/18_rdp_open_internet.yaml
+📍 Найдено проблем: 1
+    Строка 12: CidrIp: 0.0.0.0/0  # ⚠️ TRIGGER: open to internet  ← 0.0.0.0/0
+
+💥 Issue: Порт RDP (3389) открыт для всего интернета.
+🎯 Risk: Брутфорс паролей, уязвимости типа BlueKeep, шифровальщики (ransomware), полный доступ к серверу.
+❌ Insecure:
+    SecurityGroupIngress:
+        IpProtocol: tcp
+        FromPort: 3389
+        ToPort: 3389
+        CidrIp: 0.0.0.0/0
+✅ Secure:
+    SecurityGroupIngress:
+        IpProtocol: tcp
+        FromPort: 3389
+        ToPort: 3389
+        CidrIp: 10.0.0.0/8
+🛠️ Remediation:
+    • Немедленно ограничьте CIDR до доверенных IP
+    • Используйте AWS Systems Manager Session Manager
+    • Настройте VPN для удалённого доступа
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/05_host_pid.yaml
+
+⚠️  [HIGH] Host PID
+📁 Файл: 1_Easy_test/05_host_pid.yaml
+📍 Найдено проблем: 1
+    Строка 7: hostPID: true  # ⚠️ TRIGGER: host PID namespace
+
+💥 Issue: Контейнер видит пространство процессов хоста.
+🎯 Risk: Возможность видеть все процессы на узле, отправлять сигналы (kill)
+   процессам хоста, читать переменные окружения чужих процессов.
+
+❌ Insecure:
+    spec:
+      hostPID: true
+
+✅ Secure:
+    spec:
+      hostPID: false
+
+🛠️ Remediation:
+    • Установите hostPID: false
+    • Изолируйте пространство процессов контейнера
+    • Используйте стандартные механизмы мониторинга Kubernetes
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/05_host_pid.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 1_Easy_test/05_host_pid.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 21: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+1_Easy_test/05_host_pid.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 1_Easy_test/05_host_pid.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 21: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23a_pod.yaml
+
+⚠️  [CRITICAL] Privileged Container
+📁 Файл: 2_Medium_test/02-23/02-23a_pod.yaml
+📍 Найдено проблем: 1
+    Строка 12: privileged: true
+
+💥 Issue: Контейнер имеет почти полный доступ к хост-системе.
+🎯 Risk: Злоумышленник может получить полный контроль над узлом.
+❌ Insecure:
+    securityContext:
+      privileged: true
+✅ Secure:
+    securityContext:
+      privileged: false
+🛠️ Remediation:
+    • Установите privileged: false
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23a_pod.yaml
+
+⚠️  [CRITICAL] Docker Privileged
+📁 Файл: 2_Medium_test/02-23/02-23a_pod.yaml
+📍 Найдено проблем: 1
+    Строка 12: privileged: true
+
+💥 Issue: Контейнер запущен в привилегированном режиме Docker.
+🎯 Risk: Полный доступ к устройствам хоста, возможность загрузки модулей ядра, обход изоляции, container escape.
+❌ Insecure:
+    services:
+        app:
+            image: myapp
+            privileged: true  # ❌ Опасно!
+✅ Secure:
+    services:
+        app:
+            image: myapp
+            privileged: false
+            cap_add:
+                - NET_BIND_SERVICE
+            security_opt:
+                - no-new-privileges:true
+            read_only: true
+🛠️ Remediation:
+    • Установите privileged: false
+    • Используйте cap_add только для необходимых capabilities
+    • Добавьте security_opt: no-new-privileges:true
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23a_pod.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 2_Medium_test/02-23/02-23a_pod.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 25: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23a_pod.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 2_Medium_test/02-23/02-23a_pod.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 25: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+
+⚠️  [CRITICAL] Privileged Container
+📁 Файл: 2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+📍 Найдено проблем: 1
+    Строка 8: privileged: true  # ⚠️ TRIGGER: разрешает privileged
+
+💥 Issue: Контейнер имеет почти полный доступ к хост-системе.
+🎯 Risk: Злоумышленник может получить полный контроль над узлом.
+❌ Insecure:
+    securityContext:
+      privileged: true
+✅ Secure:
+    securityContext:
+      privileged: false
+🛠️ Remediation:
+    • Установите privileged: false
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+
+⚠️  [HIGH] Host Network
+📍 Найдено проблем: 1
+    Строка 9: hostNetwork: true
+
+💥 Issue: Контейнер использует сетевой стек хоста.
+🎯 Risk: Доступ ко всем сетевым интерфейсам хоста, сниффинг трафика, обход NetworkPolicies, доступ к сервисам на localhost хоста.
+❌ Insecure:
+    spec:
+      hostNetwork: true
+✅ Secure:
+    spec:
+      hostNetwork: false
+🛠️ Remediation:
+    • Установите hostNetwork: false
+    • Используйте стандартную сеть Kubernetes
+    • Настройте NetworkPolicy для контроля трафика
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+
+⚠️  [HIGH] Host PID
+📁 Файл: 2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+📍 Найдено проблем: 1
+    Строка 10: hostPID: true
+
+💥 Issue: Контейнер видит пространство процессов хоста.
+🎯 Risk: Возможность видеть все процессы на узле, отправлять сигналы (kill)
+   процессам хоста, читать переменные окружения чужих процессов.
+
+❌ Insecure:
+    spec:
+      hostPID: true
+
+✅ Secure:
+    spec:
+      hostPID: false
+
+🛠️ Remediation:
+    • Установите hostPID: false
+    • Изолируйте пространство процессов контейнера
+    • Используйте стандартные механизмы мониторинга Kubernetes
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+
+⚠️  [CRITICAL] Docker Privileged
+📁 Файл: 2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+📍 Найдено проблем: 1
+    Строка 8: privileged: true  # ⚠️ TRIGGER: разрешает privileged
+
+💥 Issue: Контейнер запущен в привилегированном режиме Docker.
+🎯 Risk: Полный доступ к устройствам хоста, возможность загрузки модулей ядра, обход изоляции, container escape.
+❌ Insecure:
+    services:
+        app:
+            image: myapp
+            privileged: true  # ❌ Опасно!
+✅ Secure:
+    services:
+        app:
+            image: myapp
+            privileged: false
+            cap_add:
+                - NET_BIND_SERVICE
+            security_opt:
+                - no-new-privileges:true
+            read_only: true
+🛠️ Remediation:
+    • Установите privileged: false
+    • Используйте cap_add только для необходимых capabilities
+    • Добавьте security_opt: no-new-privileges:true
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-01/02-01a_pod_without_networkpolicy.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 2_Medium_test/02-01/02-01a_pod_without_networkpolicy.yaml
+📍 Найдено проблем: 1
+    Строка 11: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-01/02-01a_pod_without_networkpolicy.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 2_Medium_test/02-01/02-01a_pod_without_networkpolicy.yaml
+📍 Найдено проблем: 1
+    Строка 11: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-22/02-22_docker_socket.yaml
+
+⚠️  [MEDIUM] Docker Latest Tag
+📁 Файл: 2_Medium_test/02-22/02-22_docker_socket.yaml
+📍 Найдено проблем: 2
+    Строка 5: gitlab/gitlab-runner:latest  ← явный тег :latest
+    Строка 16: gitlab/gitlab-runner:latest  ← явный тег :latest
+
+💥 Issue: Использование тега latest в Docker Compose.
+🎯 Risk: Невозможность воспроизведения окружения, риск получения битой или уязвимой версии при пересоздании.
+❌ Insecure:
+    services:
+        web:
+            image: nginx
+            # или image: nginx:latest
+✅ Secure:
+    services:
+        web:
+            image: nginx:1.21.0
+🛠️ Remediation:
+    • Всегда указывайте конкретную версию образа
+    • Используйте SHA-хеш для production
+    • Настройте Dependabot для обновления образов
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-02/02-02a_pod_with_sa.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 2_Medium_test/02-02/02-02a_pod_with_sa.yaml
+📍 Найдено проблем: 2
+    Строка 10: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 25: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-02/02-02a_pod_with_sa.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 2_Medium_test/02-02/02-02a_pod_with_sa.yaml
+📍 Найдено проблем: 2
+    Строка 10: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 25: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-03/02-03a_pod_with_images.yaml
+
+⚠️  [MEDIUM] Latest Tag
+📍 Найдено проблем: 1
+    Строка 11: gcr.io/community/image:latest  ← явный тег :latest
+
+💥 Issue: Использование плавающего тега latest в образах.
+🎯 Risk: Непредсказуемые обновления, тихое внедрение уязвимостей.
+❌ Insecure:
+    image: nginx:latest
+    image: nginx
+✅ Secure:
+    image: nginx:1.24.0
+    image: nginx@sha256:abc123...
+🛠️ Remediation:
+    • Указывайте конкретную версию образа
+    • Используйте SHA-хеш для production
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-03/02-03a_pod_with_images.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 2_Medium_test/02-03/02-03a_pod_with_images.yaml
+📍 Найдено проблем: 4
+    Строка 8: - name: app1  ← container 'app1' missing limits: cpu, memory
+    Строка 10: - name: app2  ← container 'app2' missing limits: cpu, memory
+    Строка 21: - name: app1  ← container 'app1' missing limits: cpu, memory
+    Строка 23: - name: app2  ← container 'app2' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-03/02-03a_pod_with_images.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 2_Medium_test/02-03/02-03a_pod_with_images.yaml
+📍 Найдено проблем: 4
+    Строка 8: - name: app1  ← container 'app1' missing probes: livenessProbe, readinessProbe
+    Строка 10: - name: app2  ← container 'app2' missing probes: livenessProbe, readinessProbe
+    Строка 21: - name: app1  ← container 'app1' missing probes: livenessProbe, readinessProbe
+    Строка 23: - name: app2  ← container 'app2' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-03/01_pod.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 3_Hard_test/03-03/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 10: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-03/01_pod.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 3_Hard_test/03-03/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 10: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-21/01_apiserver_config.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 3_Hard_test/03-21/01_apiserver_config.yaml
+📍 Найдено проблем: 6
+    Строка 9: - name: kube-apiserver  ← container 'kube-apiserver' missing limits: cpu, memory
+    Строка 15: - name: audit-log  ← container 'audit-log' missing limits: cpu, memory
+    Строка 18: - name: audit-log  ← container 'audit-log' missing limits: cpu, memory
+    Строка 32: - name: kube-apiserver  ← container 'kube-apiserver' missing limits: cpu, memory
+    Строка 38: - name: audit-log  ← container 'audit-log' missing limits: cpu, memory
+    Строка 42: - name: audit-log  ← container 'audit-log' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-21/01_apiserver_config.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 3_Hard_test/03-21/01_apiserver_config.yaml
+📍 Найдено проблем: 6
+    Строка 9: - name: kube-apiserver  ← container 'kube-apiserver' missing probes: livenessProbe, readinessProbe
+    Строка 15: - name: audit-log  ← container 'audit-log' missing probes: livenessProbe, readinessProbe
+    Строка 18: - name: audit-log  ← container 'audit-log' missing probes: livenessProbe, readinessProbe
+    Строка 32: - name: kube-apiserver  ← container 'kube-apiserver' missing probes: livenessProbe, readinessProbe
+    Строка 38: - name: audit-log  ← container 'audit-log' missing probes: livenessProbe, readinessProbe
+    Строка 42: - name: audit-log  ← container 'audit-log' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-01/01_pod.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 3_Hard_test/03-01/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 10: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-01/01_pod.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 3_Hard_test/03-01/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 10: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-09/01_apiserver_config.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 3_Hard_test/03-09/01_apiserver_config.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: kube-apiserver  ← container 'kube-apiserver' missing limits: cpu, memory
+    Строка 24: - name: kube-apiserver  ← container 'kube-apiserver' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-09/01_apiserver_config.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 3_Hard_test/03-09/01_apiserver_config.yaml
+📍 Найдено проблем: 2
+    Строка 9: - name: kube-apiserver  ← container 'kube-apiserver' missing probes: livenessProbe, readinessProbe
+    Строка 24: - name: kube-apiserver  ← container 'kube-apiserver' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-10/01_pod.yaml
+
+⚠️  [CRITICAL] Privileged Container
+📁 Файл: 3_Hard_test/03-10/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 12: privileged: true
+
+💥 Issue: Контейнер имеет почти полный доступ к хост-системе.
+🎯 Risk: Злоумышленник может получить полный контроль над узлом.
+❌ Insecure:
+    securityContext:
+      privileged: true
+✅ Secure:
+    securityContext:
+      privileged: false
+🛠️ Remediation:
+    • Установите privileged: false
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-10/01_pod.yaml
+
+⚠️  [CRITICAL] Docker Privileged
+📁 Файл: 3_Hard_test/03-10/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 12: privileged: true
+
+💥 Issue: Контейнер запущен в привилегированном режиме Docker.
+🎯 Risk: Полный доступ к устройствам хоста, возможность загрузки модулей ядра, обход изоляции, container escape.
+❌ Insecure:
+    services:
+        app:
+            image: myapp
+            privileged: true  # ❌ Опасно!
+✅ Secure:
+    services:
+        app:
+            image: myapp
+            privileged: false
+            cap_add:
+                - NET_BIND_SERVICE
+            security_opt:
+                - no-new-privileges:true
+            read_only: true
+🛠️ Remediation:
+    • Установите privileged: false
+    • Используйте cap_add только для необходимых capabilities
+    • Добавьте security_opt: no-new-privileges:true
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-10/01_pod.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 3_Hard_test/03-10/01_pod.yaml
+📍 Найдено проблем: 6
+    Строка 9: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 17: - name: host-root  ← container 'host-root' missing limits: cpu, memory
+    Строка 20: - name: host-root  ← container 'host-root' missing limits: cpu, memory
+    Строка 33: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 42: - name: app-data  ← container 'app-data' missing limits: cpu, memory
+    Строка 45: - name: app-data  ← container 'app-data' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-10/01_pod.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 3_Hard_test/03-10/01_pod.yaml
+📍 Найдено проблем: 6
+    Строка 9: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 17: - name: host-root  ← container 'host-root' missing probes: livenessProbe, readinessProbe
+    Строка 20: - name: host-root  ← container 'host-root' missing probes: livenessProbe, readinessProbe
+    Строка 33: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 42: - name: app-data  ← container 'app-data' missing probes: livenessProbe, readinessProbe
+    Строка 45: - name: app-data  ← container 'app-data' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-15/01_image_deployment.yaml
+
+⚠️  [MEDIUM] Latest Tag
+📍 Найдено проблем: 1
+    Строка 19: registry.company.com/app:latest  ← явный тег :latest
+
+💥 Issue: Использование плавающего тега latest в образах.
+🎯 Risk: Непредсказуемые обновления, тихое внедрение уязвимостей.
+❌ Insecure:
+    image: nginx:latest
+    image: nginx
+✅ Secure:
+    image: nginx:1.24.0
+    image: nginx@sha256:abc123...
+🛠️ Remediation:
+    • Указывайте конкретную версию образа
+    • Используйте SHA-хеш для production
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-15/01_image_deployment.yaml
+
+⚠️  [MEDIUM] Missing Resource Limits
+📁 Файл: 3_Hard_test/03-15/01_image_deployment.yaml
+📍 Найдено проблем: 2
+    Строка 18: - name: app  ← container 'app' missing limits: cpu, memory
+    Строка 41: - name: app  ← container 'app' missing limits: cpu, memory
+
+💥 Issue: Не ограничены ресурсы CPU/Memory для контейнера.
+🎯 Risk: Один контейнер может занять все ресурсы узла (DoS), падение других приложений на узле, нестабильность кластера.
+❌ Insecure:
+    resources:
+        requests:
+            memory: "64Mi"
+            # limits отсутствуют
+✅ Secure:
+    resources:
+        limits:
+            cpu: "500m"
+            memory: "128Mi"
+        requests:
+            cpu: "250m"
+            memory: "64Mi"
+🛠️ Remediation:
+    • Укажите limits.cpu и limits.memory
+    • Настройте LimitRange для namespace
+    • Используйте ResourceQuota для контроля
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-15/01_image_deployment.yaml
+
+⚠️  [MEDIUM] Missing Health Probes
+📁 Файл: 3_Hard_test/03-15/01_image_deployment.yaml
+📍 Найдено проблем: 2
+    Строка 18: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+    Строка 41: - name: app  ← container 'app' missing probes: livenessProbe, readinessProbe
+
+💥 Issue: Отсутствуют проверки здоровья (livenessProbe/readinessProbe).
+🎯 Risk: Трафик направляется на неработающие поды, зависшие контейнеры не перезапускаются автоматически.
+❌ Insecure:
+    containers:
+        - name: app
+          # livenessProbe отсутствует
+          # readinessProbe отсутствует
+✅ Secure:
+    containers:
+        - name: app
+          livenessProbe:
+              httpGet:
+                  path: /healthz
+                  port: 8080
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          readinessProbe:
+              httpGet:
+                  path: /ready
+                  port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+🛠️ Remediation:
+    • Добавьте livenessProbe для перезапуска зависших контейнеров
+    • Добавьте readinessProbe для контроля готовности
+    • Настройте startupProbe для медленно стартующих приложений
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-11/01a_main_vulnerable.tf
+
+⚠️  [HIGH] Secrets in Env Vars
+📁 Файл: 3_Hard_test/03-11/01a_main_vulnerable.tf
+📍 Найдено проблем: 1
+    Строка 7: password       = "SuperSecret123!"
+
+💥 Issue: Секреты хранятся в переменных окружения в открытом виде.
+🎯 Risk: Секреты видны через kubectl describe, docker inspect, могут попасть в логи систем мониторинга или отладки.
+❌ Insecure:
+    env:
+        - name: DB_PASSWORD
+          value: "super_secret_password"
+        - name: API_KEY
+          value: "sk-1234567890abcdef"
+✅ Secure:
+    envFrom:
+        secretRef:
+            name: app-secrets
+🛠️ Remediation:
+    • Используйте Kubernetes Secrets вместо plaintext values
+    • Монтируйте секреты как файлы с readOnly: true
+    • Включите encryption at rest для etcd
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-11/01a_main_vulnerable.tf
+
+⚠️  [CRITICAL] CI/CD Plain Text Secrets
+📁 Файл: 3_Hard_test/03-11/01a_main_vulnerable.tf
+📍 Найдено проблем: 1
+    Строка 7: password       = "SuperSecret123!"  ← hardcoded secret in CI/CD script
+
+💥 Issue: Секреты зашиты в код конфигурации CI/CD в открытом виде.
+🎯 Risk: Попадание секретов в git-историю, доступ к секретам у всех разработчиков с доступом к репозиторию.
+❌ Insecure:
+    # .gitlab-ci.yml
+    variables:
+        DB_PASSWORD: "hardcoded_password"  # ❌
+        API_KEY: "sk-1234567890abcdef"     # ❌
+✅ Secure:
+    # GitLab CI:
+        variables:
+            DB_PASSWORD: $SECURE_DB_PASSWORD  # ✅ Из CI/CD Variables
+    # GitHub Actions:
+        env:
+            PASSWORD: ${ secrets.DB_PASSWORD }  # ✅ Из Repository Secrets
+🛠️ Remediation:
+    • Удалите hardcoded secrets из CI/CD конфигурации
+    • Используйте GitLab CI/CD Variables или GitHub Actions Secrets
+    • Подключите внешний secret manager вместо literal values
+    • Ротируйте найденные секреты, если они уже использовались
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-11/03a_terraform_vulnerable.tfvars
+
+⚠️  [HIGH] Secrets in Env Vars
+📁 Файл: 3_Hard_test/03-11/03a_terraform_vulnerable.tfvars
+📍 Найдено проблем: 1
+    Строка 4: db_password = "SuperSecret123!"
+
+💥 Issue: Секреты хранятся в переменных окружения в открытом виде.
+🎯 Risk: Секреты видны через kubectl describe, docker inspect, могут попасть в логи систем мониторинга или отладки.
+❌ Insecure:
+    env:
+        - name: DB_PASSWORD
+          value: "super_secret_password"
+        - name: API_KEY
+          value: "sk-1234567890abcdef"
+✅ Secure:
+    envFrom:
+        secretRef:
+            name: app-secrets
+🛠️ Remediation:
+    • Используйте Kubernetes Secrets вместо plaintext values
+    • Монтируйте секреты как файлы с readOnly: true
+    • Включите encryption at rest для etcd
+
+    
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-11/03a_terraform_vulnerable.tfvars
+
+⚠️  [CRITICAL] CI/CD Plain Text Secrets
+📁 Файл: 3_Hard_test/03-11/03a_terraform_vulnerable.tfvars
+📍 Найдено проблем: 1
+    Строка 4: db_password = "SuperSecret123!"  ← hardcoded secret in CI/CD script
+
+💥 Issue: Секреты зашиты в код конфигурации CI/CD в открытом виде.
+🎯 Risk: Попадание секретов в git-историю, доступ к секретам у всех разработчиков с доступом к репозиторию.
+❌ Insecure:
+    # .gitlab-ci.yml
+    variables:
+        DB_PASSWORD: "hardcoded_password"  # ❌
+        API_KEY: "sk-1234567890abcdef"     # ❌
+✅ Secure:
+    # GitLab CI:
+        variables:
+            DB_PASSWORD: $SECURE_DB_PASSWORD  # ✅ Из CI/CD Variables
+    # GitHub Actions:
+        env:
+            PASSWORD: ${ secrets.DB_PASSWORD }  # ✅ Из Repository Secrets
+🛠️ Remediation:
+    • Удалите hardcoded secrets из CI/CD конфигурации
+    • Используйте GitLab CI/CD Variables или GitHub Actions Secrets
+    • Подключите внешний secret manager вместо literal values
+    • Ротируйте найденные секреты, если они уже использовались
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/06_host_ipc.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 1_Easy_test/06_host_ipc.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/24_anonymous_auth.yaml
+
+⚠️  [MEDIUM] Image from Untrusted Registry
+📁 Файл: 1_Easy_test/24_anonymous_auth.yaml
+📍 Найдено проблем: 2
+    Строка 10: image: k8s.gcr.io/kube-apiserver:v1.28.0  ← образ из недоверенного реестра: k8s.gcr.io/kube-apiserver:v1.28.0
+    Строка 25: image: k8s.gcr.io/kube-apiserver:v1.28.0  ← образ из недоверенного реестра: k8s.gcr.io/kube-apiserver:v1.28.0
+
+💥 Issue: Используются образы из публичных/недоверенных реестров (docker.io вместо private).
+🎯 Risk: Запуск непроверенного кода. Риск supply-chain атаки. Отсутствие аудита и сканирования уязвимостей.
+❌ Insecure:
+        containers:
+        - name: app
+          image: docker.io/randomuser/suspicious-app:latest
+✅ Secure:
+        containers:
+        - name: app
+          image: registry.company.internal/team/app:v1.2.3
+        spec:
+          imagePullSecrets:
+          - name: registry-credentials
+🛠️ Remediation:
+      • Используйте только доверенные приватные реестры
+      • Настройте imagePullSecrets для аутентификации
+      • Внедрите сканирование образов на уязвимости
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/22_dashboard_exposed.yaml
+
+⚠️  [MEDIUM] LoadBalancer Internal
+📁 Файл: 1_Easy_test/22_dashboard_exposed.yaml
+📍 Найдено проблем: 1
+    Строка 10: type: LoadBalancer  # ⚠️ TRIGGER: publicly exposed  ← LoadBalancer без aws-load-balancer-internal: true
+
+💥 Issue: Публичный облачный LoadBalancer создан без необходимости (нет internal: true).
+🎯 Risk: Внутренний сервис доступен из интернета. Прямая атака на приложение без необходимости обхода периметра.
+❌ Insecure:
+        kind: Service
+        spec:
+          type: LoadBalancer
+✅ Secure:
+        metadata:
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+        spec:
+          type: LoadBalancer
+🛠️ Remediation:
+      • Добавьте аннотацию для внутреннего LB
+      • Используйте PrivateLink для доступа из других VPC
+      • Проверьте все Service типа LoadBalancer
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/01_privileged_container.yaml
+
+⚠️  [HIGH] Kubernetes Pod Security Policy
+📁 Файл: 1_Easy_test/01_privileged_container.yaml
+📍 Найдено проблем: 1
+    Строка 11: privileged: true  # ⚠️ TRIGGER: privileged mode enabled  ← privileged: true без restricted Pod Security
+
+💥 Issue: Не применяются политики безопасности подов (отсутствие PSP или PodSecurityStandard).
+🎯 Risk: Отсутствие контроля за настройками безопасности подов. Риск запуска привилегированных контейнеров, escape на хост.
+❌ Insecure:
+        kind: Namespace
+        metadata:
+          name: production
+        # Нет pod-security.kubernetes.io/enforce
+✅ Secure:
+        kind: Namespace
+        metadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
+🛠️ Remediation:
+      • Включите Pod Security Admission на namespace
+      • Используйте OPA/Gatekeeper для кастомных политик
+      • Аудируйте все поды на нарушения security context
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/09_docker_privileged.yaml
+
+⚠️  [HIGH] Kubernetes Pod Security Policy
+📁 Файл: 1_Easy_test/09_docker_privileged.yaml
+📍 Найдено проблем: 1
+    Строка 6: privileged: true  # ⚠️ TRIGGER: privileged container  ← privileged: true без restricted Pod Security
+
+💥 Issue: Не применяются политики безопасности подов (отсутствие PSP или PodSecurityStandard).
+🎯 Risk: Отсутствие контроля за настройками безопасности подов. Риск запуска привилегированных контейнеров, escape на хост.
+❌ Insecure:
+        kind: Namespace
+        metadata:
+          name: production
+        # Нет pod-security.kubernetes.io/enforce
+✅ Secure:
+        kind: Namespace
+        metadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
+🛠️ Remediation:
+      • Включите Pod Security Admission на namespace
+      • Используйте OPA/Gatekeeper для кастомных политик
+      • Аудируйте все поды на нарушения security context
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/25_cicd_plaintext_secrets.yaml
+
+⚠️  [HIGH] CI/CD Pipeline Without Approval
+📁 Файл: 1_Easy_test/25_cicd_plaintext_secrets.yaml
+📍 Найдено проблем: 2
+    Строка 6: deploy_production:  ← job 'deploy_production' без when: manual / approval
+    Строка 21: deploy_production:  ← job 'deploy_production' без when: manual / approval
+
+💥 Issue: Развёртывание в production происходит автоматически (нет when: manual или approval).
+🎯 Risk: Отсутствие человеческого контроля перед продакшеном. Риск инцидентов, уязвимостей, несанкционированных изменений.
+❌ Insecure:
+        deploy-production:
+          stage: deploy
+          script:
+            - ./deploy.sh production
+✅ Secure:
+        deploy-production:
+          stage: deploy
+          when: manual
+          script:
+            - ./deploy.sh production
+🛠️ Remediation:
+      • Добавьте when: manual для production деплоя
+      • Настройте required approvals в merge requests
+      • Защитите main ветку от прямых пушей
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/19_ssh_open_internet.yaml
+
+⚠️  [HIGH] Security Group Overly Permissive
+📁 Файл: 1_Easy_test/19_ssh_open_internet.yaml
+📍 Найдено проблем: 2
+    Строка 12: CidrIp: 0.0.0.0/0  # ⚠️ TRIGGER: open to internet  ← слишком широкий CIDR: 0.0.0.0/0
+    Строка 26: CidrIp: 10.0.0.0/8  # ✅ OK: internal network only  ← слишком широкий CIDR: 10.0.0.0/8
+
+💥 Issue: Правила безопасности разрешают доступ из слишком широкой сети (CIDR /16 или шире).
+🎯 Risk: Чрезмерный доступ к ресурсу. Увеличение поверхности атаки. Сложность контроля и аудита входящих соединений.
+❌ Insecure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.0.0/16
+          # Или хуже: 0.0.0.0/0
+✅ Secure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.1.0/24
+          # SourceSecurityGroupId: sg-frontend
+🛠️ Remediation:
+      • Ограничьте CIDR до конкретных подсетей
+      • Используйте SourceSecurityGroupId вместо CIDR
+      • Применяйте принцип наименьших привилегий
+
+
+
+====================================================================================================
+
+
+
+
+1_Easy_test/18_rdp_open_internet.yaml
+
+⚠️  [HIGH] Security Group Overly Permissive
+📁 Файл: 1_Easy_test/18_rdp_open_internet.yaml
+📍 Найдено проблем: 1
+    Строка 12: CidrIp: 0.0.0.0/0  # ⚠️ TRIGGER: open to internet  ← слишком широкий CIDR: 0.0.0.0/0
+
+💥 Issue: Правила безопасности разрешают доступ из слишком широкой сети (CIDR /16 или шире).
+🎯 Risk: Чрезмерный доступ к ресурсу. Увеличение поверхности атаки. Сложность контроля и аудита входящих соединений.
+❌ Insecure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.0.0/16
+          # Или хуже: 0.0.0.0/0
+✅ Secure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.1.0/24
+          # SourceSecurityGroupId: sg-frontend
+🛠️ Remediation:
+      • Ограничьте CIDR до конкретных подсетей
+      • Используйте SourceSecurityGroupId вместо CIDR
+      • Применяйте принцип наименьших привилегий
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-08/02-08_kms_key_rotation.yaml
+
+⚠️  [HIGH] IAM Policy Wildcard Service
+📁 Файл: 2_Medium_test/02-08/02-08_kms_key_rotation.yaml
+📍 Найдено проблем: 2
+    Строка 15: Action: "kms:*"  ← wildcard action: kms:*
+    Строка 33: Action: "kms:*"  ← wildcard action: kms:*
+
+💥 Issue: IAM политика использует wildcard (*) в действиях (например s3:* или ec2:*).
+🎯 Risk: Избыточные права. Компрометация роли = полный доступ к сервису. Возможность удаления данных или создания дорогих ресурсов.
+❌ Insecure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:*"
+          Resource: "*"
+✅ Secure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:GetObject"
+          - "s3:PutObject"
+          Resource: "arn:aws:s3:::my-bucket/prefix/*"
+🛠️ Remediation:
+      • Замените wildcard на конкретные действия
+      • Ограничьте Resource до конкретных ARN
+      • Используйте IAM Access Analyzer для аудита
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-08/02-08_kms_key_rotation.yaml
+
+⚠️  [MEDIUM] KMS Key Rotation Disabled
+📁 Файл: 2_Medium_test/02-08/02-08_kms_key_rotation.yaml
+📍 Найдено проблем: 1
+    Строка 8: EnableKeyRotation: false  # ⚠️ TRIGGER: ротация отключена  ← EnableKeyRotation: false
+
+💥 Issue: Отключена автоматическая ротация ключей KMS (enableKeyRotation: false).
+🎯 Risk: Длительная жизнь ключа = больший ущерб при утечке. Несоответствие требованиям безопасности (PCI-DSS, HIPAA, etc).
+❌ Insecure:
+        Type: AWS::KMS::Key
+        Properties:
+          EnableKeyRotation: false
+✅ Secure:
+        Type: AWS::KMS::Key
+        Properties:
+          EnableKeyRotation: true
+🛠️ Remediation:
+      • Включите EnableKeyRotation: true для всех ключей
+      • Настройте мониторинг использования ключей
+      • Регулярно аудируйте KMS ключи
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-04/02-04_ingress_without_tls.yaml
+
+⚠️  [HIGH] Ingress Without TLS
+📁 Файл: 2_Medium_test/02-04/02-04_ingress_without_tls.yaml
+📍 Найдено проблем: 1
+    Строка 5: kind: Ingress  ← Ingress без секции tls:
+
+💥 Issue: Ingress без tls: секции (входящий трафик не шифруется).
+🎯 Risk: Трафик передаётся в открытом виде. Перехват данных в публичных сетях. Утечка чувствительной информации, сессионных токенов.
+❌ Insecure:
+        kind: Ingress
+        spec:
+          rules:
+          - host: app.example.com
+            http:
+              paths: [...]
+        # Секция tls: отсутствует!
+✅ Secure:
+        kind: Ingress
+        spec:
+          tls:
+          - hosts:
+            - app.example.com
+            secretName: app-tls-secret
+          rules:
+          - host: app.example.com
+🛠️ Remediation:
+      • Добавьте tls: секцию во все Ingress ресурсы
+      • Используйте cert-manager для автоматических сертификатов
+      • Настройте редирект HTTP → HTTPS
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-18/02-18_azure_nsg.yaml
+
+⚠️  [CRITICAL] Azure NSG Any-Any Rule
+📁 Файл: 2_Medium_test/02-18/02-18_azure_nsg.yaml
+📍 Найдено проблем: 1
+    Строка 16: "sourceAddressPrefix": "*",  # ⚠️ TRIGGER: любой источник  ← sourceAddressPrefix: * и destinationPortRange: *
+
+💥 Issue: Правило NSG разрешает весь трафик отовсюду (source: *, dest: *, port: *).
+🎯 Risk: Полное отсутствие контроля сетевого трафика. Любой хост может подключиться к любому сервису.
+❌ Insecure:
+        sourceAddressPrefix: "*"
+        destinationPortRange: "*"
+✅ Secure:
+        sourceAddressPrefix: "10.0.0.0/8"
+        destinationPortRange: "443"
+🛠️ Remediation:
+      • Удалите правила Any-Any
+      • Разрешайте только необходимые порты и IP
+      • Используйте принцип default deny
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-11/02-11_rds_publicly_accessible.yaml
+
+⚠️  [CRITICAL] RDS Publicly Accessible
+📁 Файл: 2_Medium_test/02-11/02-11_rds_publicly_accessible.yaml
+📍 Найдено проблем: 1
+    Строка 10: PubliclyAccessible: true  # ⚠️ TRIGGER: публичный доступ  ← PubliclyAccessible: true
+
+💥 Issue: База данных RDS доступна из публичной сети (PubliclyAccessible: true).
+🎯 Risk: Прямой доступ к базе данных из интернета. Риск взлома, утечки данных, атак типа SQL injection и ransomware.
+❌ Insecure:
+        Type: AWS::RDS::DBInstance
+        Properties:
+          PubliclyAccessible: true
+✅ Secure:
+        Type: AWS::RDS::DBInstance
+        Properties:
+          PubliclyAccessible: false
+🛠️ Remediation:
+      • Установите PubliclyAccessible: false
+      • Разместите БД в приватных подсетях
+      • Используйте bastion host или Systems Manager для доступа
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-11/02-11_rds_publicly_accessible.yaml
+
+⚠️  [HIGH] RDS Encryption Disabled
+📁 Файл: 2_Medium_test/02-11/02-11_rds_publicly_accessible.yaml
+📍 Найдено проблем: 1
+    Строка 11: StorageEncrypted: false  ← StorageEncrypted: false
+
+💥 Issue: Данные на диске RDS не зашифрованы (StorageEncrypted: false).
+🎯 Risk: Раскрытие данных при доступе к хранилищу (data at rest). Нарушение требований комплаенса (GDPR, PCI-DSS).
+❌ Insecure:
+        Type: AWS::RDS::DBInstance
+        Properties:
+          StorageEncrypted: false
+✅ Secure:
+        Type: AWS::RDS::DBInstance
+        Properties:
+          StorageEncrypted: true
+          KmsKeyId: !Ref DatabaseKMSKey
+🛠️ Remediation:
+      • Включите шифрование для всех RDS инстансов
+      • Используйте KMS ключи для управления
+      • Зашифруйте существующие БД через snapshot copy
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-19/02-19_azure_sql_firewall.yaml
+
+⚠️  [CRITICAL] Azure SQL Firewall Open
+📁 Файл: 2_Medium_test/02-19/02-19_azure_sql_firewall.yaml
+📍 Найдено проблем: 1
+    Строка 10: "startIpAddress": "0.0.0.0",  # ⚠️ TRIGGER: весь диапазон  ← firewall 0.0.0.0 — 255.255.255.255
+
+💥 Issue: Брандмауэр Azure SQL разрешает подключения отовсюду (0.0.0.0 - 255.255.255.255).
+🎯 Risk: База данных доступна из любой точки мира. Высокий риск взлома и утечки данных.
+❌ Insecure:
+        startIpAddress: "0.0.0.0"
+        endIpAddress: "255.255.255.255"
+✅ Secure:
+        startIpAddress: "10.0.1.0"
+        endIpAddress: "10.0.1.255"
+🛠️ Remediation:
+      • Ограничьте firewall rules до конкретных IP
+      • Используйте Private Endpoint для доступа
+      • Включите Advanced Threat Protection
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23a_pod.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 2_Medium_test/02-23/02-23a_pod.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23a_pod.yaml
+
+⚠️  [HIGH] Kubernetes Pod Security Policy
+📁 Файл: 2_Medium_test/02-23/02-23a_pod.yaml
+📍 Найдено проблем: 1
+    Строка 12: privileged: true  ← privileged: true без restricted Pod Security
+
+💥 Issue: Не применяются политики безопасности подов (отсутствие PSP или PodSecurityStandard).
+🎯 Risk: Отсутствие контроля за настройками безопасности подов. Риск запуска привилегированных контейнеров, escape на хост.
+❌ Insecure:
+        kind: Namespace
+        metadata:
+          name: production
+        # Нет pod-security.kubernetes.io/enforce
+✅ Secure:
+        kind: Namespace
+        metadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
+🛠️ Remediation:
+      • Включите Pod Security Admission на namespace
+      • Используйте OPA/Gatekeeper для кастомных политик
+      • Аудируйте все поды на нарушения security context
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+
+⚠️  [HIGH] Kubernetes Pod Security Policy
+📁 Файл: 2_Medium_test/02-23/02-23b_podsecuritypolicy.yaml
+📍 Найдено проблем: 1
+    Строка 8: privileged: true  # ⚠️ TRIGGER: разрешает privileged  ← privileged: true без restricted Pod Security
+
+💥 Issue: Не применяются политики безопасности подов (отсутствие PSP или PodSecurityStandard).
+🎯 Risk: Отсутствие контроля за настройками безопасности подов. Риск запуска привилегированных контейнеров, escape на хост.
+❌ Insecure:
+        kind: Namespace
+        metadata:
+          name: production
+        # Нет pod-security.kubernetes.io/enforce
+✅ Secure:
+        kind: Namespace
+        metadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
+🛠️ Remediation:
+      • Включите Pod Security Admission на namespace
+      • Используйте OPA/Gatekeeper для кастомных политик
+      • Аудируйте все поды на нарушения security context
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-21/02-21_github_actions.yaml
+
+⚠️  [MEDIUM] GitHub Actions Without Pin
+📁 Файл: 2_Medium_test/02-21/02-21_github_actions.yaml
+📍 Найдено проблем: 2
+    Строка 9: - uses: actions/checkout@v3  # ⚠️ TRIGGER: тег вместо SHA  ← action не закреплён SHA: actions/checkout@v3
+    Строка 10: - uses: actions/setup-node@v3  # ⚠️ TRIGGER: тег вместо SHA  ← action не закреплён SHA: actions/setup-node@v3
+
+💥 Issue: Actions используются по тегу/ветке, а не по хешу (uses: actions/checkout@v2 вместо SHA).
+🎯 Risk: Supply-chain атака через компрометацию action. Непредсказуемое поведение пайплайна при обновлении тега.
+❌ Insecure:
+        - uses: actions/checkout@v2
+        - uses: some/user-action@main
+✅ Secure:
+        - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+🛠️ Remediation:
+      • Используйте полные SHA хеши для всех actions
+      • Настройте Dependabot для обновления зависимостей
+      • Аудируйте используемые actions регулярно
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-25/02-25a_backend.tf
+
+⚠️  [HIGH] Terraform State Remote Without Lock
+📁 Файл: 2_Medium_test/02-25/02-25a_backend.tf
+📍 Найдено проблем: 1
+    Строка 4: backend "s3" {  ← S3 backend без dynamodb_table/use_lockfile (state locking)
+
+💥 Issue: Удалённый state Terraform без блокировки (S3 backend без dynamodb_table).
+🎯 Risk: Повреждение state при параллельном запуске terraform apply. Потеря управления ресурсами, дублирование, удаление.
+❌ Insecure:
+        terraform {
+          backend "s3" {
+            bucket = "my-terraform-state"
+            key    = "prod/terraform.tfstate"
+            region = "us-east-1"
+          }
+        }
+✅ Secure:
+        terraform {
+          backend "s3" {
+            bucket         = "my-terraform-state"
+            key            = "prod/terraform.tfstate"
+            region         = "us-east-1"
+            dynamodb_table = "terraform-locks"
+          }
+        }
+🛠️ Remediation:
+      • Добавьте dynamodb_table для state locking
+      • Включите шифрование state файла
+      • Настройте версионирование S3 bucket
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-20/02-20_gitlab_pipeline.yaml
+
+⚠️  [HIGH] CI/CD Pipeline Without Approval
+📁 Файл: 2_Medium_test/02-20/02-20_gitlab_pipeline.yaml
+📍 Найдено проблем: 1
+    Строка 8: deploy_production:  ← job 'deploy_production' без when: manual / approval
+
+💥 Issue: Развёртывание в production происходит автоматически (нет when: manual или approval).
+🎯 Risk: Отсутствие человеческого контроля перед продакшеном. Риск инцидентов, уязвимостей, несанкционированных изменений.
+❌ Insecure:
+        deploy-production:
+          stage: deploy
+          script:
+            - ./deploy.sh production
+✅ Secure:
+        deploy-production:
+          stage: deploy
+          when: manual
+          script:
+            - ./deploy.sh production
+🛠️ Remediation:
+      • Добавьте when: manual для production деплоя
+      • Настройте required approvals в merge requests
+      • Защитите main ветку от прямых пушей
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-06/02-06_security_group_permissive.yaml
+
+⚠️  [HIGH] Security Group Overly Permissive
+📁 Файл: 2_Medium_test/02-06/02-06_security_group_permissive.yaml
+📍 Найдено проблем: 2
+    Строка 12: CidrIp: 10.0.0.0/8  # ⚠️ TRIGGER: /8 слишком широкий  ← слишком широкий CIDR: 10.0.0.0/8
+    Строка 16: CidrIp: 172.16.0.0/12  # ⚠️ TRIGGER: /12 слишком широкий  ← слишком широкий CIDR: 172.16.0.0/12
+
+💥 Issue: Правила безопасности разрешают доступ из слишком широкой сети (CIDR /16 или шире).
+🎯 Risk: Чрезмерный доступ к ресурсу. Увеличение поверхности атаки. Сложность контроля и аудита входящих соединений.
+❌ Insecure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.0.0/16
+          # Или хуже: 0.0.0.0/0
+✅ Secure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.1.0/24
+          # SourceSecurityGroupId: sg-frontend
+🛠️ Remediation:
+      • Ограничьте CIDR до конкретных подсетей
+      • Используйте SourceSecurityGroupId вместо CIDR
+      • Применяйте принцип наименьших привилегий
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-05/02-05_loadbalancer_internal.yaml
+
+⚠️  [MEDIUM] LoadBalancer Internal
+📁 Файл: 2_Medium_test/02-05/02-05_loadbalancer_internal.yaml
+📍 Найдено проблем: 1
+    Строка 12: type: LoadBalancer  ← LoadBalancer без aws-load-balancer-internal: true
+
+💥 Issue: Публичный облачный LoadBalancer создан без необходимости (нет internal: true).
+🎯 Risk: Внутренний сервис доступен из интернета. Прямая атака на приложение без необходимости обхода периметра.
+❌ Insecure:
+        kind: Service
+        spec:
+          type: LoadBalancer
+✅ Secure:
+        metadata:
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+        spec:
+          type: LoadBalancer
+🛠️ Remediation:
+      • Добавьте аннотацию для внутреннего LB
+      • Используйте PrivateLink для доступа из других VPC
+      • Проверьте все Service типа LoadBalancer
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-15/02-15_elasticsearch_access.yaml
+
+⚠️  [HIGH] IAM Policy Wildcard Service
+📁 Файл: 2_Medium_test/02-15/02-15_elasticsearch_access.yaml
+📍 Найдено проблем: 1
+    Строка 14: Action: "es:*"  ← wildcard action: es:*
+
+💥 Issue: IAM политика использует wildcard (*) в действиях (например s3:* или ec2:*).
+🎯 Risk: Избыточные права. Компрометация роли = полный доступ к сервису. Возможность удаления данных или создания дорогих ресурсов.
+❌ Insecure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:*"
+          Resource: "*"
+✅ Secure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:GetObject"
+          - "s3:PutObject"
+          Resource: "arn:aws:s3:::my-bucket/prefix/*"
+🛠️ Remediation:
+      • Замените wildcard на конкретные действия
+      • Ограничьте Resource до конкретных ARN
+      • Используйте IAM Access Analyzer для аудита
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-13/02-13_redis_config.yaml
+
+⚠️  [CRITICAL] Redis Without Password
+📁 Файл: 2_Medium_test/02-13/02-13_redis_config.yaml
+📍 Найдено проблем: 1
+    Строка 10: bind 0.0.0.0  ← bind 0.0.0.0 без requirepass
+
+💥 Issue: Redis работает без аутентификации (requirepass не установлен).
+🎯 Risk: Неавторизованный доступ к кэшу/данным. Возможность выполнения LUA-скриптов, очистки данных, использования Redis для атак на другие системы.
+❌ Insecure:
+        port 6379
+        bind 0.0.0.0
+        # requirepass не установлен!
+✅ Secure:
+        port 6379
+        bind 127.0.0.1
+        requirepass ${REDIS_PASSWORD}
+🛠️ Remediation:
+      • Установите requirepass с сложным паролем
+      • Ограничьте bind до приватных интерфейсов
+      • Отключите опасные команды через rename-command
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-22/02-22_docker_socket.yaml
+
+⚠️  [CRITICAL] Docker Socket Mounted
+📁 Файл: 2_Medium_test/02-22/02-22_docker_socket.yaml
+📍 Найдено проблем: 1
+    Строка 7: - /var/run/docker.sock:/var/run/docker.sock  # ⚠️ TRIGGER: docker socket  ← монтирование docker.sock
+
+💥 Issue: В контейнер примонтирован Docker socket (/var/run/docker.sock).
+🎯 Risk: Полный контроль над хостом через Docker API. Container escape, запуск майнеров, кража данных.
+❌ Insecure:
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+✅ Secure:
+        services:
+          app:
+            image: myapp
+            # volumes: без docker.sock
+🛠️ Remediation:
+      • Удалите монтирование docker.sock
+      • Используйте Kaniko/Buildah для сборки в K8s
+      • Вынесите сборку в изолированный CI-раннер
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-16/02-16b_lambda_permission.yaml
+
+⚠️  [HIGH] Lambda Function Public Trigger
+📁 Файл: 2_Medium_test/02-16/02-16b_lambda_permission.yaml
+📍 Найдено проблем: 1
+    Строка 9: Principal: "*"  # ⚠️ TRIGGER: любой principal  ← Principal: "*" — публичный вызов Lambda
+
+💥 Issue: Lambda-функция вызывается публично без авторизации (Principal: *).
+🎯 Risk: Неавторизованный вызов функции. Риск исчерпания квот, выполнения вредоносных операций, утечки данных.
+❌ Insecure:
+        Type: AWS::Lambda::Permission
+        Properties:
+          Principal: "*"
+✅ Secure:
+        Type: AWS::Lambda::Permission
+        Properties:
+          Principal: apigateway.amazonaws.com
+          SourceArn: !Sub "arn:aws:execute-api:..."
+🛠️ Remediation:
+      • Ограничьте Principal до конкретного сервиса
+      • Добавьте SourceArn для ограничения источника
+      • Включите авторизацию на уровне API Gateway
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-17/02-17b_function_iam.yaml
+
+⚠️  [HIGH] Cloud Function HTTP Without Auth
+📁 Файл: 2_Medium_test/02-17/02-17b_function_iam.yaml
+📍 Найдено проблем: 1
+    Строка 10: - allUsers  # ⚠️ TRIGGER: публичный доступ  ← allUsers + cloudfunctions.invoker
+
+💥 Issue: HTTP Cloud Function доступна без аутентификации (allUsers имеет роль cloudfunctions.invoker).
+🎯 Risk: Функция доступна любому пользователю интернета. Риск атак, утечки данных, финансовых потерь.
+❌ Insecure:
+        members:
+        - allUsers
+        role: roles/cloudfunctions.invoker
+✅ Secure:
+        members:
+        - serviceAccount:backend-sa@project.iam.gserviceaccount.com
+        role: roles/cloudfunctions.invoker
+🛠️ Remediation:
+      • Удалите allUsers из IAM policy
+      • Добавьте только доверенные service accounts
+      • Используйте IAM авторизацию для всех функций
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-12/02-12_rds_encryption.yaml
+
+⚠️  [HIGH] RDS Encryption Disabled
+📁 Файл: 2_Medium_test/02-12/02-12_rds_encryption.yaml
+📍 Найдено проблем: 1
+    Строка 9: StorageEncrypted: false  # ⚠️ TRIGGER: шифрование отключено  ← StorageEncrypted: false
+
+💥 Issue: Данные на диске RDS не зашифрованы (StorageEncrypted: false).
+🎯 Risk: Раскрытие данных при доступе к хранилищу (data at rest). Нарушение требований комплаенса (GDPR, PCI-DSS).
+❌ Insecure:
+        Type: AWS::RDS::DBInstance
+        Properties:
+          StorageEncrypted: false
+✅ Secure:
+        Type: AWS::RDS::DBInstance
+        Properties:
+          StorageEncrypted: true
+          KmsKeyId: !Ref DatabaseKMSKey
+🛠️ Remediation:
+      • Включите шифрование для всех RDS инстансов
+      • Используйте KMS ключи для управления
+      • Зашифруйте существующие БД через snapshot copy
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-07/02-07_iam_policy_wildcard.yaml
+
+⚠️  [HIGH] IAM Policy Wildcard Service
+📁 Файл: 2_Medium_test/02-07/02-07_iam_policy_wildcard.yaml
+📍 Найдено проблем: 1
+    Строка 12: - "s3:*"  # ⚠️ TRIGGER: wildcard в действии  ← wildcard action: s3:*
+
+💥 Issue: IAM политика использует wildcard (*) в действиях (например s3:* или ec2:*).
+🎯 Risk: Избыточные права. Компрометация роли = полный доступ к сервису. Возможность удаления данных или создания дорогих ресурсов.
+❌ Insecure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:*"
+          Resource: "*"
+✅ Secure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:GetObject"
+          - "s3:PutObject"
+          Resource: "arn:aws:s3:::my-bucket/prefix/*"
+🛠️ Remediation:
+      • Замените wildcard на конкретные действия
+      • Ограничьте Resource до конкретных ARN
+      • Используйте IAM Access Analyzer для аудита
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-02/02-02a_pod_with_sa.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 2_Medium_test/02-02/02-02a_pod_with_sa.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-02/02-02b_serviceaccount.yaml
+
+⚠️  [HIGH] Service Account Token Mount
+📁 Файл: 2_Medium_test/02-02/02-02b_serviceaccount.yaml
+📍 Найдено проблем: 1
+    Строка 7: automountServiceAccountToken: true  # ⚠️ TRIGGER: явно включено  ← automountServiceAccountToken: true
+
+💥 Issue: Токен ServiceAccount автоматически монтируется в под (automountServiceAccountToken: true).
+🎯 Risk: Утечка токена = доступ к Kubernetes API. Возможность создания/удаления ресурсов в кластере в зависимости от RBAC.
+❌ Insecure:
+        spec:
+          serviceAccountName: default
+          automountServiceAccountToken: true
+✅ Secure:
+        automountServiceAccountToken: false
+        spec:
+          serviceAccountName: app-sa
+          automountServiceAccountToken: false
+🛠️ Remediation:
+      • Установите automountServiceAccountToken: false на ServiceAccount
+      • Переопределите на уровне Pod если нужно
+      • Используйте отдельные SA для каждого приложения
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-03/02-03a_pod_with_images.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 2_Medium_test/02-03/02-03a_pod_with_images.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-03/02-03a_pod_with_images.yaml
+
+⚠️  [MEDIUM] Image from Untrusted Registry
+📁 Файл: 2_Medium_test/02-03/02-03a_pod_with_images.yaml
+📍 Найдено проблем: 1
+    Строка 22: image: registry.company.internal/app:1.2.3  # ✅ OK: private registry  ← образ из недоверенного реестра: registry.company.internal/app:1.2.3
+
+💥 Issue: Используются образы из публичных/недоверенных реестров (docker.io вместо private).
+🎯 Risk: Запуск непроверенного кода. Риск supply-chain атаки. Отсутствие аудита и сканирования уязвимостей.
+❌ Insecure:
+        containers:
+        - name: app
+          image: docker.io/randomuser/suspicious-app:latest
+✅ Secure:
+        containers:
+        - name: app
+          image: registry.company.internal/team/app:v1.2.3
+        spec:
+          imagePullSecrets:
+          - name: registry-credentials
+🛠️ Remediation:
+      • Используйте только доверенные приватные реестры
+      • Настройте imagePullSecrets для аутентификации
+      • Внедрите сканирование образов на уязвимости
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-09/02-09_cloudtrail_logging.yaml
+
+⚠️  [HIGH] CloudTrail Logging Disabled
+📁 Файл: 2_Medium_test/02-09/02-09_cloudtrail_logging.yaml
+📍 Найдено проблем: 1
+    Строка 9: IsMultiRegionTrail: false  # ⚠️ TRIGGER: только один регион  ← IsMultiRegionTrail: false
+
+💥 Issue: Логирование действий в AWS отключено или ограничено одним регионом (IsMultiRegionTrail: false).
+🎯 Risk: Невозможно отследить действия злоумышленника в других регионах. Отсутствие аудита = нарушение требований безопасности.
+❌ Insecure:
+        Type: AWS::CloudTrail::Trail
+        Properties:
+          IsMultiRegionTrail: false
+✅ Secure:
+        Type: AWS::CloudTrail::Trail
+        Properties:
+          IsMultiRegionTrail: true
+          EnableLogFileValidation: true
+🛠️ Remediation:
+      • Включите multi-region trail для всех аккаунтов
+      • Включите валидацию логов
+      • Шифруйте логи через KMS
+
+
+
+====================================================================================================
+
+
+
+
+2_Medium_test/02-14/02-14_mongodb_config.yaml
+
+⚠️  [CRITICAL] MongoDB Without Auth
+📁 Файл: 2_Medium_test/02-14/02-14_mongodb_config.yaml
+📍 Найдено проблем: 1
+    Строка 14: authorization: disabled  # ⚠️ TRIGGER: авторизация отключена  ← authorization: disabled
+
+💥 Issue: MongoDB работает без включения авторизации (security.authorization: disabled).
+🎯 Risk: Любой клиент может получить полный доступ к БД. Утечка данных, модификация, удаление, ransomware-атаки.
+❌ Insecure:
+        security:
+          authorization: disabled
+✅ Secure:
+        security:
+          authorization: enabled
+🛠️ Remediation:
+      • Включите authorization: enabled
+      • Создайте пользователей с минимальными правами
+      • Ограничьте bindIp до приватных адресов
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-03/01_pod.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 3_Hard_test/03-03/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 2: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-03/02_serviceaccount.yaml
+
+⚠️  [HIGH] Service Account Token Mount
+📁 Файл: 3_Hard_test/03-03/02_serviceaccount.yaml
+📍 Найдено проблем: 1
+    Строка 6: automountServiceAccountToken: true  ← automountServiceAccountToken: true
+
+💥 Issue: Токен ServiceAccount автоматически монтируется в под (automountServiceAccountToken: true).
+🎯 Risk: Утечка токена = доступ к Kubernetes API. Возможность создания/удаления ресурсов в кластере в зависимости от RBAC.
+❌ Insecure:
+        spec:
+          serviceAccountName: default
+          automountServiceAccountToken: true
+✅ Secure:
+        automountServiceAccountToken: false
+        spec:
+          serviceAccountName: app-sa
+          automountServiceAccountToken: false
+🛠️ Remediation:
+      • Установите automountServiceAccountToken: false на ServiceAccount
+      • Переопределите на уровне Pod если нужно
+      • Используйте отдельные SA для каждого приложения
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-03/01_pod.yaml
+
+⚠️  [HIGH] Service Account Token Mount
+📁 Файл: 3_Hard_test/03-03/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 8: automountServiceAccountToken: true  ← automountServiceAccountToken: true
+
+💥 Issue: Токен ServiceAccount автоматически монтируется в под (automountServiceAccountToken: true).
+🎯 Risk: Утечка токена = доступ к Kubernetes API. Возможность создания/удаления ресурсов в кластере в зависимости от RBAC.
+❌ Insecure:
+        spec:
+          serviceAccountName: default
+          automountServiceAccountToken: true
+✅ Secure:
+        automountServiceAccountToken: false
+        spec:
+          serviceAccountName: app-sa
+          automountServiceAccountToken: false
+🛠️ Remediation:
+      • Установите automountServiceAccountToken: false на ServiceAccount
+      • Переопределите на уровне Pod если нужно
+      • Используйте отдельные SA для каждого приложения
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-21/01_apiserver_config.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 3_Hard_test/03-21/01_apiserver_config.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-21/01_apiserver_config.yaml
+
+⚠️  [MEDIUM] Image from Untrusted Registry
+📁 Файл: 3_Hard_test/03-21/01_apiserver_config.yaml
+📍 Найдено проблем: 2
+    Строка 10: image: k8s.gcr.io/kube-apiserver:v1.28.0  ← образ из недоверенного реестра: k8s.gcr.io/kube-apiserver:v1.28.0
+    Строка 33: image: k8s.gcr.io/kube-apiserver:v1.28.0  ← образ из недоверенного реестра: k8s.gcr.io/kube-apiserver:v1.28.0
+
+💥 Issue: Используются образы из публичных/недоверенных реестров (docker.io вместо private).
+🎯 Risk: Запуск непроверенного кода. Риск supply-chain атаки. Отсутствие аудита и сканирования уязвимостей.
+❌ Insecure:
+        containers:
+        - name: app
+          image: docker.io/randomuser/suspicious-app:latest
+✅ Secure:
+        containers:
+        - name: app
+          image: registry.company.internal/team/app:v1.2.3
+        spec:
+          imagePullSecrets:
+          - name: registry-credentials
+🛠️ Remediation:
+      • Используйте только доверенные приватные реестры
+      • Настройте imagePullSecrets для аутентификации
+      • Внедрите сканирование образов на уязвимости
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-21/02_host_volume.yaml
+
+⚠️  [HIGH] CI/CD Pipeline Without Approval
+📁 Файл: 3_Hard_test/03-21/02_host_volume.yaml
+📍 Найдено проблем: 1
+    Строка 22: spec:  ← job 'spec' без when: manual / approval
+
+💥 Issue: Развёртывание в production происходит автоматически (нет when: manual или approval).
+🎯 Risk: Отсутствие человеческого контроля перед продакшеном. Риск инцидентов, уязвимостей, несанкционированных изменений.
+❌ Insecure:
+        deploy-production:
+          stage: deploy
+          script:
+            - ./deploy.sh production
+✅ Secure:
+        deploy-production:
+          stage: deploy
+          when: manual
+          script:
+            - ./deploy.sh production
+🛠️ Remediation:
+      • Добавьте when: manual для production деплоя
+      • Настройте required approvals в merge requests
+      • Защитите main ветку от прямых пушей
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-04/03_s3_bucket.yaml
+
+⚠️  [HIGH] IAM Policy Wildcard Service
+📁 Файл: 3_Hard_test/03-04/03_s3_bucket.yaml
+📍 Найдено проблем: 1
+    Строка 17: Action: "s3:*"  # ⚠️ TRIGGER: полный доступ к S3  ← wildcard action: s3:*
+
+💥 Issue: IAM политика использует wildcard (*) в действиях (например s3:* или ec2:*).
+🎯 Risk: Избыточные права. Компрометация роли = полный доступ к сервису. Возможность удаления данных или создания дорогих ресурсов.
+❌ Insecure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:*"
+          Resource: "*"
+✅ Secure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:GetObject"
+          - "s3:PutObject"
+          Resource: "arn:aws:s3:::my-bucket/prefix/*"
+🛠️ Remediation:
+      • Замените wildcard на конкретные действия
+      • Ограничьте Resource до конкретных ARN
+      • Используйте IAM Access Analyzer для аудита
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-13/01_pipeline.yaml
+
+⚠️  [HIGH] CI/CD Pipeline Without Approval
+📁 Файл: 3_Hard_test/03-13/01_pipeline.yaml
+📍 Найдено проблем: 2
+    Строка 6: deploy:  ← job 'deploy' без when: manual / approval
+    Строка 19: deploy:  ← job 'deploy' без when: manual / approval
+
+💥 Issue: Развёртывание в production происходит автоматически (нет when: manual или approval).
+🎯 Risk: Отсутствие человеческого контроля перед продакшеном. Риск инцидентов, уязвимостей, несанкционированных изменений.
+❌ Insecure:
+        deploy-production:
+          stage: deploy
+          script:
+            - ./deploy.sh production
+✅ Secure:
+        deploy-production:
+          stage: deploy
+          when: manual
+          script:
+            - ./deploy.sh production
+🛠️ Remediation:
+      • Добавьте when: manual для production деплоя
+      • Настройте required approvals в merge requests
+      • Защитите main ветку от прямых пушей
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-01/03_ingress.yaml
+
+⚠️  [HIGH] Ingress Without TLS
+📁 Файл: 3_Hard_test/03-01/03_ingress.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Ingress  ← Ingress без секции tls:
+
+💥 Issue: Ingress без tls: секции (входящий трафик не шифруется).
+🎯 Risk: Трафик передаётся в открытом виде. Перехват данных в публичных сетях. Утечка чувствительной информации, сессионных токенов.
+❌ Insecure:
+        kind: Ingress
+        spec:
+          rules:
+          - host: app.example.com
+            http:
+              paths: [...]
+        # Секция tls: отсутствует!
+✅ Secure:
+        kind: Ingress
+        spec:
+          tls:
+          - hosts:
+            - app.example.com
+            secretName: app-tls-secret
+          rules:
+          - host: app.example.com
+🛠️ Remediation:
+      • Добавьте tls: секцию во все Ingress ресурсы
+      • Используйте cert-manager для автоматических сертификатов
+      • Настройте редирект HTTP → HTTPS
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-09/01_apiserver_config.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 3_Hard_test/03-09/01_apiserver_config.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-09/01_apiserver_config.yaml
+
+⚠️  [MEDIUM] Image from Untrusted Registry
+📁 Файл: 3_Hard_test/03-09/01_apiserver_config.yaml
+📍 Найдено проблем: 2
+    Строка 10: image: k8s.gcr.io/kube-apiserver:v1.28.0  ← образ из недоверенного реестра: k8s.gcr.io/kube-apiserver:v1.28.0
+    Строка 25: image: k8s.gcr.io/kube-apiserver:v1.28.0  ← образ из недоверенного реестра: k8s.gcr.io/kube-apiserver:v1.28.0
+
+💥 Issue: Используются образы из публичных/недоверенных реестров (docker.io вместо private).
+🎯 Risk: Запуск непроверенного кода. Риск supply-chain атаки. Отсутствие аудита и сканирования уязвимостей.
+❌ Insecure:
+        containers:
+        - name: app
+          image: docker.io/randomuser/suspicious-app:latest
+✅ Secure:
+        containers:
+        - name: app
+          image: registry.company.internal/team/app:v1.2.3
+        spec:
+          imagePullSecrets:
+          - name: registry-credentials
+🛠️ Remediation:
+      • Используйте только доверенные приватные реестры
+      • Настройте imagePullSecrets для аутентификации
+      • Внедрите сканирование образов на уязвимости
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-17/02_key_policy.yaml
+
+⚠️  [HIGH] IAM Policy Wildcard Service
+📁 Файл: 3_Hard_test/03-17/02_key_policy.yaml
+📍 Найдено проблем: 1
+    Строка 14: Action: "kms:*"  ← wildcard action: kms:*
+
+💥 Issue: IAM политика использует wildcard (*) в действиях (например s3:* или ec2:*).
+🎯 Risk: Избыточные права. Компрометация роли = полный доступ к сервису. Возможность удаления данных или создания дорогих ресурсов.
+❌ Insecure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:*"
+          Resource: "*"
+✅ Secure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:GetObject"
+          - "s3:PutObject"
+          Resource: "arn:aws:s3:::my-bucket/prefix/*"
+🛠️ Remediation:
+      • Замените wildcard на конкретные действия
+      • Ограничьте Resource до конкретных ARN
+      • Используйте IAM Access Analyzer для аудита
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-18/04_route_tables.yaml
+
+⚠️  [HIGH] Security Group Overly Permissive
+📁 Файл: 3_Hard_test/03-18/04_route_tables.yaml
+📍 Найдено проблем: 1
+    Строка 27: CidrIp: 10.1.0.0/16  # ⚠️ Весь диапазон VPCB  ← слишком широкий CIDR: 10.1.0.0/16
+
+💥 Issue: Правила безопасности разрешают доступ из слишком широкой сети (CIDR /16 или шире).
+🎯 Risk: Чрезмерный доступ к ресурсу. Увеличение поверхности атаки. Сложность контроля и аудита входящих соединений.
+❌ Insecure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.0.0/16
+          # Или хуже: 0.0.0.0/0
+✅ Secure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.1.0/24
+          # SourceSecurityGroupId: sg-frontend
+🛠️ Remediation:
+      • Ограничьте CIDR до конкретных подсетей
+      • Используйте SourceSecurityGroupId вместо CIDR
+      • Применяйте принцип наименьших привилегий
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-18/02_vpc_b.yaml
+
+⚠️  [MEDIUM] VPC Flow Logs Disabled
+📁 Файл: 3_Hard_test/03-18/02_vpc_b.yaml
+📍 Найдено проблем: 1
+    Строка 4: Type: AWS::EC2::VPC  ← VPC без AWS::EC2::FlowLog/aws_flow_log в наборе файлов
+
+💥 Issue: Не включены Flow Logs для мониторинга сетевого трафика VPC.
+🎯 Risk: Слепая зона в мониторинге сети. Невозможно выявить сканирование, эксфильтрацию данных или C2-трафик.
+❌ Insecure:
+        Type: AWS::EC2::VPC
+        Properties:
+          CidrBlock: 10.0.0.0/16
+        # Нет связанного ресурса AWS::EC2::FlowLog
+✅ Secure:
+        Type: AWS::EC2::FlowLog
+        Properties:
+          ResourceType: VPC
+          TrafficType: ALL
+🛠️ Remediation:
+      • Включите Flow Logs для всех VPC
+      • Настройте отправку в CloudWatch Logs или S3
+      • Создайте алерты на аномальный трафик
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-18/03_peering_connection.yaml
+
+⚠️  [HIGH] Security Group Overly Permissive
+📁 Файл: 3_Hard_test/03-18/03_peering_connection.yaml
+📍 Найдено проблем: 1
+    Строка 27: CidrIp: 10.1.0.0/16  # ⚠️ Весь диапазон VPCB  ← слишком широкий CIDR: 10.1.0.0/16
+
+💥 Issue: Правила безопасности разрешают доступ из слишком широкой сети (CIDR /16 или шире).
+🎯 Risk: Чрезмерный доступ к ресурсу. Увеличение поверхности атаки. Сложность контроля и аудита входящих соединений.
+❌ Insecure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.0.0/16
+          # Или хуже: 0.0.0.0/0
+✅ Secure:
+        SecurityGroupIngress:
+          CidrIp: 10.0.1.0/24
+          # SourceSecurityGroupId: sg-frontend
+🛠️ Remediation:
+      • Ограничьте CIDR до конкретных подсетей
+      • Используйте SourceSecurityGroupId вместо CIDR
+      • Применяйте принцип наименьших привилегий
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-18/01_vpc_a.yaml
+
+⚠️  [MEDIUM] VPC Flow Logs Disabled
+📁 Файл: 3_Hard_test/03-18/01_vpc_a.yaml
+📍 Найдено проблем: 1
+    Строка 5: Type: AWS::EC2::VPC  ← VPC без AWS::EC2::FlowLog/aws_flow_log в наборе файлов
+
+💥 Issue: Не включены Flow Logs для мониторинга сетевого трафика VPC.
+🎯 Risk: Слепая зона в мониторинге сети. Невозможно выявить сканирование, эксфильтрацию данных или C2-трафик.
+❌ Insecure:
+        Type: AWS::EC2::VPC
+        Properties:
+          CidrBlock: 10.0.0.0/16
+        # Нет связанного ресурса AWS::EC2::FlowLog
+✅ Secure:
+        Type: AWS::EC2::FlowLog
+        Properties:
+          ResourceType: VPC
+          TrafficType: ALL
+🛠️ Remediation:
+      • Включите Flow Logs для всех VPC
+      • Настройте отправку в CloudWatch Logs или S3
+      • Создайте алерты на аномальный трафик
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-16/02_tagging_policy.yaml
+
+⚠️  [HIGH] CI/CD Pipeline Without Approval
+📁 Файл: 3_Hard_test/03-16/02_tagging_policy.yaml
+📍 Найдено проблем: 1
+    Строка 8: taggingPolicy:  ← job 'taggingPolicy' без when: manual / approval
+
+💥 Issue: Развёртывание в production происходит автоматически (нет when: manual или approval).
+🎯 Risk: Отсутствие человеческого контроля перед продакшеном. Риск инцидентов, уязвимостей, несанкционированных изменений.
+❌ Insecure:
+        deploy-production:
+          stage: deploy
+          script:
+            - ./deploy.sh production
+✅ Secure:
+        deploy-production:
+          stage: deploy
+          when: manual
+          script:
+            - ./deploy.sh production
+🛠️ Remediation:
+      • Добавьте when: manual для production деплоя
+      • Настройте required approvals в merge requests
+      • Защитите main ветку от прямых пушей
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-10/01_pod.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 3_Hard_test/03-10/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Pod  ← workload Pod без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-10/01_pod.yaml
+
+⚠️  [HIGH] Kubernetes Pod Security Policy
+📁 Файл: 3_Hard_test/03-10/01_pod.yaml
+📍 Найдено проблем: 1
+    Строка 12: privileged: true  ← privileged: true без restricted Pod Security
+
+💥 Issue: Не применяются политики безопасности подов (отсутствие PSP или PodSecurityStandard).
+🎯 Risk: Отсутствие контроля за настройками безопасности подов. Риск запуска привилегированных контейнеров, escape на хост.
+❌ Insecure:
+        kind: Namespace
+        metadata:
+          name: production
+        # Нет pod-security.kubernetes.io/enforce
+✅ Secure:
+        kind: Namespace
+        metadata:
+          labels:
+            pod-security.kubernetes.io/enforce: restricted
+🛠️ Remediation:
+      • Включите Pod Security Admission на namespace
+      • Используйте OPA/Gatekeeper для кастомных политик
+      • Аудируйте все поды на нарушения security context
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-15/01_image_deployment.yaml
+
+⚠️  [HIGH] Network Policy Missing
+📁 Файл: 3_Hard_test/03-15/01_image_deployment.yaml
+📍 Найдено проблем: 1
+    Строка 3: kind: Deployment  ← workload Deployment без NetworkPolicy в наборе файлов
+
+💥 Issue: Pod без соответствующего NetworkPolicy в namespace.
+🎯 Risk: Отсутствует сегментация сети. Атакующий может сканировать и атаковать другие сервисы изнутри кластера (lateral movement).
+❌ Insecure:
+        # Pod без соответствующего NetworkPolicy
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: vulnerable-pod
+        # В namespace нет NetworkPolicy, селектирующей этот под
+✅ Secure:
+        # Явный NetworkPolicy, разрешающий только необходимый трафик
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: allow-frontend-only
+        spec:
+          podSelector:
+            matchLabels:
+              app: backend
+          policyTypes:
+          - Ingress
+          - Egress
+🛠️ Remediation:
+      • Создайте NetworkPolicy для каждого namespace
+      • Используйте default-deny политику по умолчанию
+      • Разрешайте только необходимый трафик между подами
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-15/01_image_deployment.yaml
+
+⚠️  [MEDIUM] Image from Untrusted Registry
+📁 Файл: 3_Hard_test/03-15/01_image_deployment.yaml
+📍 Найдено проблем: 2
+    Строка 19: image: registry.company.com/app:latest  ← образ из недоверенного реестра: registry.company.com/app:latest
+    Строка 42: image: registry.company.com/app@sha256:abc123...  ← образ из недоверенного реестра: registry.company.com/app@sha256:abc123...
+
+💥 Issue: Используются образы из публичных/недоверенных реестров (docker.io вместо private).
+🎯 Risk: Запуск непроверенного кода. Риск supply-chain атаки. Отсутствие аудита и сканирования уязвимостей.
+❌ Insecure:
+        containers:
+        - name: app
+          image: docker.io/randomuser/suspicious-app:latest
+✅ Secure:
+        containers:
+        - name: app
+          image: registry.company.internal/team/app:v1.2.3
+        spec:
+          imagePullSecrets:
+          - name: registry-credentials
+🛠️ Remediation:
+      • Используйте только доверенные приватные реестры
+      • Настройте imagePullSecrets для аутентификации
+      • Внедрите сканирование образов на уязвимости
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-05/01_secret.yaml
+
+⚠️  [HIGH] CI/CD Pipeline Without Approval
+📁 Файл: 3_Hard_test/03-05/01_secret.yaml
+📍 Найдено проблем: 2
+    Строка 3: Resources:  ← job 'Resources' без when: manual / approval
+    Строка 15: Resources:  ← job 'Resources' без when: manual / approval
+
+💥 Issue: Развёртывание в production происходит автоматически (нет when: manual или approval).
+🎯 Risk: Отсутствие человеческого контроля перед продакшеном. Риск инцидентов, уязвимостей, несанкционированных изменений.
+❌ Insecure:
+        deploy-production:
+          stage: deploy
+          script:
+            - ./deploy.sh production
+✅ Secure:
+        deploy-production:
+          stage: deploy
+          when: manual
+          script:
+            - ./deploy.sh production
+🛠️ Remediation:
+      • Добавьте when: manual для production деплоя
+      • Настройте required approvals в merge requests
+      • Защитите main ветку от прямых пушей
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-12/01_backend.tf
+
+⚠️  [HIGH] Terraform State Remote Without Lock
+📁 Файл: 3_Hard_test/03-12/01_backend.tf
+📍 Найдено проблем: 1
+    Строка 3: backend "s3" {  ← S3 backend без dynamodb_table/use_lockfile (state locking)
+
+💥 Issue: Удалённый state Terraform без блокировки (S3 backend без dynamodb_table).
+🎯 Risk: Повреждение state при параллельном запуске terraform apply. Потеря управления ресурсами, дублирование, удаление.
+❌ Insecure:
+        terraform {
+          backend "s3" {
+            bucket = "my-terraform-state"
+            key    = "prod/terraform.tfstate"
+            region = "us-east-1"
+          }
+        }
+✅ Secure:
+        terraform {
+          backend "s3" {
+            bucket         = "my-terraform-state"
+            key            = "prod/terraform.tfstate"
+            region         = "us-east-1"
+            dynamodb_table = "terraform-locks"
+          }
+        }
+🛠️ Remediation:
+      • Добавьте dynamodb_table для state locking
+      • Включите шифрование state файла
+      • Настройте версионирование S3 bucket
+
+
+
+====================================================================================================
+
+
+
+
+3_Hard_test/03-12/03b_bucket_policy_secure.tf
+
+⚠️  [HIGH] IAM Policy Wildcard Service
+📁 Файл: 3_Hard_test/03-12/03b_bucket_policy_secure.tf
+📍 Найдено проблем: 1
+    Строка 9: Action    = "s3:*"  ← wildcard action: s3:*
+
+💥 Issue: IAM политика использует wildcard (*) в действиях (например s3:* или ec2:*).
+🎯 Risk: Избыточные права. Компрометация роли = полный доступ к сервису. Возможность удаления данных или создания дорогих ресурсов.
+❌ Insecure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:*"
+          Resource: "*"
+✅ Secure:
+        Statement:
+        - Effect: Allow
+          Action:
+          - "s3:GetObject"
+          - "s3:PutObject"
+          Resource: "arn:aws:s3:::my-bucket/prefix/*"
+🛠️ Remediation:
+      • Замените wildcard на конкретные действия
+      • Ограничьте Resource до конкретных ARN
+      • Используйте IAM Access Analyzer для аудита
+
+
+
+====================================================================================================
+
+
+
+
