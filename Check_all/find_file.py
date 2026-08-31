@@ -1,352 +1,377 @@
-from pathlib import Path
+"""
+Оркестратор статического аудитора безопасности инфраструктуры.
+
+Находит конфигурационные файлы, запускает проверки выбранного уровня
+(easy / medium / hard) и возвращает структурированный AuditReport,
+пригодный для сериализации в JSON и использования как из CLI, так и
+из внешнего кода (например, веб-API).
+
+╔══════════════════════════════════════════════════════════════════╗
+║  ВАЖНОЕ ОГРАНИЧЕНИЕ АРХИТЕКТУРЫ                                   ║
+╚══════════════════════════════════════════════════════════════════╝
+Easy_Check.all_easy_check(), Medium_Check.all_medium_check() и
+Hard_Check.all_hard_check() сейчас только печатают отчёт в stdout —
+они не возвращают структурированные данные. Чтобы не менять эти три
+модуля (это отдельная задача), audit_project() перехватывает их
+stdout и восстанавливает из него объекты Finding через парсинг.
+
+Из этого вытекают два осознанных ограничения, пока Easy/Medium/Hard
+не начнут возвращать данные напрямую:
+
+  1. check_id — это не официальный идентификатор проверки (его нет
+     в печатаемом отчёте), а слаг, построенный из заголовка находки.
+  2. Для medium/hard проверки запускаются на всю папку одним вызовом,
+     поэтому конкретный file_path для каждой находки внутри такого
+     батча недоступен — используется путь папки с пометкой batch.
+  3. Hard_Check.py сейчас полностью состоит из заглушек (не читает
+     файлы, всегда печатает один и тот же демонстрационный пример) —
+     поэтому его вывод не преобразуется в findings, чтобы не выдавать
+     вымышленные результаты; вместо этого делается пометка в errors.
+"""
+
+from __future__ import annotations
+
+import argparse
+import contextlib
+import io
+import json
+import re
+import sys
 from collections import defaultdict
-from typing import List , Dict , Any , Optional
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, List, Optional
+
 from Easy_Check import all_easy_check
 from Medium_Check import all_medium_check
 from Hard_Check import all_hard_check
-from found_files_need_check import rewrite_to_file
+
+
 # ==================== КОНСТАНТЫ ====================
-IGNORE_DIRS = {'.git' , 'node_modules' , '__pycache__' , 'venv' , '.venv' , 'dist' , 'build'}
-TARGET_EXTENSIONS = {'.yaml' , '.yml' , '.json' , '.tf' , '.tfvars'}
-TARGET_FILES = {'Dockerfile'}
-MAX_FILE_SIZE_TO_READ = 5 * 1024 * 1024  # 5 МБ лимит для просмотра
 
-# ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ-КОНТЕЙНЕРЫ ====================
-CURRENT_FOLDER_PATH: Optional[Path] = None
-CURRENT_FOLDER_FILES: List[Path] = []
-CURRENT_CHECK_RESULT: Optional[Any] = None
-CURRENT_CHECK_ALL_RESULT: Optional[Any] = None
+IGNORE_DIRS = {
+    '.git', 'node_modules', '__pycache__', 'venv', '.venv',
+    'dist', 'build', '.terraform', '.idea', '.vscode',
+}
+TARGET_EXTENSIONS = {'.yaml', '.yml', '.json', '.tf', '.tfvars'}
+TARGET_FILES = {
+    'Dockerfile', 'docker-compose.yml', 'docker-compose.yaml',
+    '.gitlab-ci.yml', 'Jenkinsfile',
+}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 МБ
 
-ALL_PROCESSED_FOLDERS: List[Path] = []
-ALL_FOUND_FILES: List[Path] = []
-ALL_CHECK_RESULTS: List[Any] = []
-ALL_CHECK_ALL_RESULTS: List[Any] = []
-
-LAST_CHECK_SUMMARY: Dict[str , Any] = {}
+VALID_LEVELS = {'easy', 'medium', 'hard'}
 
 
-# ==================== ФУНКЦИИ ПОИСКА И СОРТИРОВКИ ====================
+# ==================== СТРУКТУРЫ ДАННЫХ ====================
 
-def find_config_files(root_path='.'):
-    """Находит все конфигурационные файлы рекурсивно"""
+@dataclass
+class Finding:
+    """Одна найденная проблема безопасности."""
+    level: str            # 'easy' | 'medium' | 'hard'
+    severity: str          # 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | ...
+    check_id: str           # слаг проверки (см. ограничение в docstring модуля)
+    title: str
+    file_path: str
+    line_num: int
+    line_text: str
+
+
+@dataclass
+class AuditReport:
+    """Итоговый результат аудита проекта."""
+    project_path: str
+    levels: List[str]
+    files_scanned: int = 0
+    findings: List[Finding] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
+
+    @property
+    def total_findings(self) -> int:
+        return len(self.findings)
+
+    @property
+    def critical_count(self) -> int:
+        return sum(1 for f in self.findings if f.severity.upper() == 'CRITICAL')
+
+    def to_dict(self) -> dict:
+        """Сериализуемое представление отчёта (для JSON / веб-API)."""
+        return {
+            'project_path': self.project_path,
+            'levels': self.levels,
+            'files_scanned': self.files_scanned,
+            'total_findings': self.total_findings,
+            'critical_count': self.critical_count,
+            'findings': [
+                {
+                    'level': f.level,
+                    'severity': f.severity,
+                    'check_id': f.check_id,
+                    'title': f.title,
+                    'file_path': f.file_path,
+                    'line_num': f.line_num,
+                    'line_text': f.line_text,
+                }
+                for f in self.findings
+            ],
+            'errors': self.errors,
+        }
+
+    def summary(self) -> str:
+        """Человекочитаемая сводка для вывода в консоль."""
+        by_severity: Dict[str, int] = defaultdict(int)
+        for f in self.findings:
+            by_severity[f.severity.upper()] += 1
+
+        lines = [
+            '=' * 70,
+            '📊 ИТОГОВАЯ СВОДКА АУДИТА',
+            '=' * 70,
+            f'   Проект: {self.project_path}',
+            f'   Уровни: {", ".join(self.levels)}',
+            f'   Файлов просканировано: {self.files_scanned}',
+            f'   Всего находок: {self.total_findings}',
+        ]
+        for sev in ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW'):
+            if by_severity.get(sev):
+                lines.append(f'      {sev}: {by_severity[sev]}')
+        if self.errors:
+            lines.append(f'   Ошибок при проверке: {len(self.errors)}')
+            for err in self.errors:
+                lines.append(f'      • {err}')
+        lines.append('=' * 70)
+        return '\n'.join(lines)
+
+
+# ==================== ПОИСК И ГРУППИРОВКА ФАЙЛОВ ====================
+
+def find_config_files(root_path: str = '.') -> List[Path]:
+    """Рекурсивно находит конфигурационные файлы, пригодные для аудита."""
     root = Path(root_path)
-    found_files = []
+    found_files: List[Path] = []
 
     if not root.exists():
-        print(f"❌ Путь не найден: {root}")
         return found_files
 
+    if root.is_file():
+        return [root]
+
     for file in root.rglob('*'):
-        if any(ignore in file.parts for ignore in IGNORE_DIRS):
+        if any(ignored in file.parts for ignored in IGNORE_DIRS):
             continue
-        if file.is_file() and (file.name in TARGET_FILES or file.suffix in TARGET_EXTENSIONS):
+        if not file.is_file():
+            continue
+        if file.name in TARGET_FILES or file.suffix in TARGET_EXTENSIONS:
+            try:
+                if file.stat().st_size > MAX_FILE_SIZE:
+                    continue
+            except OSError:
+                continue
             found_files.append(file)
 
     return found_files
 
 
-def group_files_by_folder(files: List[Path]) -> Dict[Path , List[Path]]:
-    """Группирует файлы по папкам для пакетной обработки"""
-    files_by_folder = defaultdict(list)
+def group_files_by_folder(files: List[Path]) -> Dict[Path, List[Path]]:
+    """Группирует файлы по родительским папкам (для batch-проверок medium/hard)."""
+    files_by_folder: Dict[Path, List[Path]] = defaultdict(list)
     for file in files:
         files_by_folder[file.parent].append(file)
     return dict(files_by_folder)
 
 
-def sort_by_name_hierarchical(files):
-    """Иерархическая сортировка: папки → файлы внутри"""
-    files_by_folder = defaultdict(list)
-    for file in files:
-        files_by_folder[file.parent].append(file)
+# ==================== ПАРСИНГ STDOUT В FINDING ====================
 
-    sorted_folders = sorted(files_by_folder.keys() , key=lambda f: str(f))
-    result = []
-    for folder in sorted_folders:
-        sorted_files = sorted(files_by_folder[folder] , key=lambda f: f.name)
-        result.extend(sorted_files)
-    return result
+_TITLE_RE = re.compile(r'^⚠️\s+\[(?P<severity>[A-ZА-Я]+)\]\s+(?P<title>.+)$')
+_LOCATION_RE = re.compile(
+    r'^\s*Строка\s+(?P<line>\d+):\s*(?P<text>.+?)(?:\s+←\s+(?P<reason>.+))?\s*$'
+)
 
 
-def sort_by_size(files):
-    """Сортирует файлы по размеру (от большего к меньшему)"""
-    return sorted(files , key=lambda f: f.stat().st_size , reverse=True)
+def _slugify(title: str) -> str:
+    """Простой слаг из заголовка находки (используется как check_id-заглушка)."""
+    slug = re.sub(r'[^\w]+', '-', title.strip().lower(), flags=re.UNICODE)
+    return slug.strip('-') or 'unknown'
 
 
-# ==================== ФУНКЦИИ ПРОСМОТРА ====================
-
-def read_file_content(file_path):
-    """Безопасно читает содержимое файла"""
-    try:
-        size = file_path.stat().st_size
-        if size > MAX_FILE_SIZE_TO_READ:
-            return f"⚠️ Файл слишком большой ({size / 1024 / 1024:.2f} МБ). Лимит: {MAX_FILE_SIZE_TO_READ / 1024 / 1024} МБ."
-
-        encodings = ['utf-8' , 'utf-8-sig' , 'cp1251' , 'latin-1']
-        content = None
-
-        for enc in encodings:
-            try:
-                with open(file_path , 'r' , encoding=enc) as f:
-                    content = f.read()
-                break
-            except UnicodeDecodeError:
-                continue
-
-        if content is None:
-            return "❌ Не удалось прочитать файл (возможно, бинарный)."
-        return content
-    except Exception as e:
-        return f"❌ Ошибка при чтении: {str(e)}"
-
-
-def print_file_list_with_indices(files , title="Файлы"):
-    """Выводит список файлов с номерами для выбора"""
-    print(f"\n{title} ({len(files)}):")
-    print("-" * 80)
-    if not files:
-        print("   (Файлы не найдены)")
-        return
-
-    current_folder = None
-    for idx , file in enumerate(files , 1):
-        folder = file.parent
-        if folder != current_folder:
-            print(f"\n📁 {folder}/")
-            current_folder = folder
-        print(f"   [{idx:>3}] {file.name}")
-    print("-" * 80)
-
-
-def print_files_with_size(files , title="Файлы"):
-    """Выводит файлы с указанием размера"""
-    print(f"\n{title} ({len(files)}):")
-    print("-" * 80)
-    current_folder = None
-    for file in files:
-        folder = file.parent
-        size = file.stat().st_size
-        if folder != current_folder:
-            print(f"\n📁 {folder}/")
-            current_folder = folder
-        size_str = f"{size} байт"
-        if size > 1024:
-            size_str = f"{size / 1024:.2f} КБ"
-        if size > 1024 * 1024:
-            size_str = f"{size / (1024 * 1024):.2f} МБ"
-        print(f"   {str(file.name):<50} {size_str:>10}")
-
-
-# ==================== ЗАПУСК ВАШИХ ФУНКЦИЙ CHECK И CHECK_ALL ====================
-
-def run_check(file_path: Path):
+def _parse_findings_from_output(output: str, level: str, file_path: str) -> List[Finding]:
     """
-    Запускает вашу функцию check() для одного файла.
-    Сохраняет результат в глобальные переменные.
+    Восстанавливает Finding-объекты из печатаемого отчёта Easy/Medium-проверок.
+    См. ограничения в docstring модуля — это лучшее, что можно сделать без
+    изменения самих check-модулей.
     """
-    global CURRENT_CHECK_RESULT , ALL_CHECK_RESULTS
+    findings: List[Finding] = []
+    current_severity = 'UNKNOWN'
+    current_title = 'Unknown Check'
 
-    print(f"\n🔍 Проверка файла: {file_path}")
-    print("-" * 80)
-
-    # ✅ ВЫЗОВ ВАШЕЙ ФУНКЦИИ check()
-    print(files)
-    # Вывод всех файлов по элементно
-    # for i in files:
-    #     print(i)
-    result = all_easy_check(file_path)
-    # result = 0
-    # Сохраняем в переменные
-    CURRENT_CHECK_RESULT = result
-    ALL_CHECK_RESULTS.append(result)
-
-    return result
-
-
-def run_check_all(files: List[Path]):
-    """
-    Запускает вашу функцию check_all() для группы файлов.
-    Сохраняет результат в глобальные переменные.
-    """
-    global CURRENT_CHECK_ALL_RESULT , ALL_CHECK_ALL_RESULTS
-
-    print(f"\n{'=' * 80}")
-    print(f"🛡️  КОМПЛЕКСНАЯ ПРОВЕРКА (check_all)")
-    print(f"   Файлов для анализа: {len(files)}")
-    print(f"{'=' * 80}")
-    print(files)
-    # ✅ ВЫЗОВ ВАШЕЙ ФУНКЦИИ check_all()
-    # result = all_medium_check(files)
-
-    # result = all_medium_check(files) + all_hard_check(files)
-
-
-    result = 0
-    # Сохраняем в переменные
-    CURRENT_CHECK_ALL_RESULT = result
-    ALL_CHECK_ALL_RESULTS.append(result)
-
-    return result
-
-
-def process_folder(folder_path: Path , files_in_folder: List[Path]):
-    """
-    Обрабатывает одну папку с файлами.
-    Обновляет глобальные переменные-контейнеры.
-    """
-    global CURRENT_FOLDER_PATH , CURRENT_FOLDER_FILES
-    global ALL_PROCESSED_FOLDERS , ALL_FOUND_FILES
-    global LAST_CHECK_SUMMARY
-
-    # Обновляем переменные текущей папки
-    CURRENT_FOLDER_PATH = folder_path
-    CURRENT_FOLDER_FILES = files_in_folder
-
-    print(f"\n{'=' * 80}")
-    print(f"📁 Обработка папки: {folder_path}")
-    print(f"   Файлов в папке: {len(files_in_folder)}")
-    print(f"{'=' * 80}")
-
-    # 1. Запускаем check() для каждого файла
-    for file_path in files_in_folder:
-        run_check(file_path)
-
-    # 2. Запускаем check_all() для всей группы файлов
-    # run_check_all(files_in_folder)
-
-    # 3. Накопление данных
-    ALL_PROCESSED_FOLDERS.append(folder_path)
-    ALL_FOUND_FILES.extend(files_in_folder)
-
-    # 4. Обновление сводки
-    LAST_CHECK_SUMMARY = {
-        'folder': str(folder_path) ,
-        'files_count': len(files_in_folder) ,
-        'timestamp': str(Path.cwd())
-    }
-
-
-def process_all_folders(files: List[Path]):
-    """
-    Проходит по всем папкам с файлами.
-    Переменные обновляются при каждой итерации.
-    """
-    files_by_folder = group_files_by_folder(files)
-
-    print(f"\n🔍 Найдено папок с файлами: {len(files_by_folder)}")
-    print(f"📄 Всего файлов: {len(files)}")
-
-    # Очищаем накопленные данные
-    global ALL_PROCESSED_FOLDERS , ALL_FOUND_FILES , ALL_CHECK_RESULTS , ALL_CHECK_ALL_RESULTS
-    ALL_PROCESSED_FOLDERS = []
-    ALL_FOUND_FILES = []
-    ALL_CHECK_RESULTS = []
-    ALL_CHECK_ALL_RESULTS = []
-
-    # Проходим по каждой папке
-    for folder_path , folder_files in files_by_folder.items():
-        process_folder(folder_path , folder_files)
-
-    # Финальная сводка
-    print_final_summary()
-
-
-def print_final_summary():
-    """Выводит итоговую сводку по всем обработанным папкам"""
-    print(f"\n{'=' * 80}")
-    print("📊 ИТОГОВАЯ СВОДКА")
-    print(f"{'=' * 80}")
-    print(f"   Обработано папок: {len(ALL_PROCESSED_FOLDERS)}")
-    print(f"   Всего файлов: {len(ALL_FOUND_FILES)}")
-    print(f"   Результатов check(): {len(ALL_CHECK_RESULTS)}")
-    print(f"   Результатов check_all(): {len(ALL_CHECK_ALL_RESULTS)}")
-    # print(f"\n💡 Последняя проверенная папка: {LAST_CHECK_SUMMARY.get('folder' , 'N/A')}")
-    print(f"{'=' * 80}")
-
-
-def save_in_file(hierarchical_list , size_list , filename='found_files.txt'):
-    """Сохранение результатов в файл"""
-    try:
-        with open(filename , 'w' , encoding='utf-8') as f:
-            f.write("=== Иерархическая сортировка (папки → файлы) ===\n\n")
-            current_folder = None
-            for file in hierarchical_list:
-                folder = file.parent
-                if folder != current_folder:
-                    f.write(f"\n{folder}/\n")
-                    current_folder = folder
-                f.write(f"   {file.name}\n")
-
-            f.write("\n\n=== Сортировка по размеру ===\n\n")
-            for file in size_list:
-                size = file.stat().st_size
-                f.write(f"{file} - {size} байт\n")
-
-        print(f"\n💾 Результаты сохранены в {filename}")
-    except Exception as e:
-        print(f"\n❌ Ошибка при сохранении файла: {e}")
-
-
-def view_file_interactive(files):
-    """Интерактивный режим просмотра файлов"""
-    if not files:
-        print("\nНет файлов для просмотра.")
-        return
-
-    while True:
-        print_file_list_with_indices(files , "📂 Доступные файлы для просмотра")
-        print("\nМеню:")
-        print("   Введите номер файла для просмотра")
-        print("   's' - Сохранить список в файл")
-        print("   'q' - Выход")
-
-        choice = input("\nВаш выбор: ").strip().lower()
-
-        if choice == 'q':
-            print("\n👋 Выход из программы.")
-            break
-
-        if choice == 's':
-            save_in_file(files , sort_by_size(files))
+    for line in output.splitlines():
+        title_match = _TITLE_RE.match(line)
+        if title_match:
+            current_severity = title_match.group('severity')
+            current_title = title_match.group('title').strip()
             continue
 
-        try:
-            idx = int(choice)
-            if 1 <= idx <= len(files):
-                selected_file = files[idx - 1]
-                print(f"\n{'=' * 80}")
-                print(f"📄 Чтение файла: {selected_file}")
-                print(f"{'=' * 80}")
-                content = read_file_content(selected_file)
-                print(content)
-                print(f"\n{'=' * 80}")
-                input("Нажмите Enter, чтобы продолжить...")
-            else:
-                print("❌ Неверный номер файла.")
-        except ValueError:
-            print("❌ Введите число, 's' или 'q'.")
+        loc_match = _LOCATION_RE.match(line)
+        if loc_match:
+            findings.append(Finding(
+                level=level,
+                severity=current_severity,
+                check_id=_slugify(current_title),
+                title=current_title,
+                file_path=file_path,
+                line_num=int(loc_match.group('line')),
+                line_text=loc_match.group('text').strip(),
+            ))
+
+    return findings
 
 
-# ==================== ОСНОВНАЯ ПРОГРАММА ====================
+# ==================== ГЛАВНАЯ ФУНКЦИЯ API ====================
+
+def audit_project(path: str = '.', levels: Optional[List[str]] = None) -> AuditReport:
+    """
+    Главная точка входа API.
+
+    Args:
+        path: путь к проекту или к одному файлу.
+        levels: список уровней проверки, например ['easy', 'medium'].
+                None означает «все уровни».
+
+    Returns:
+        AuditReport со всеми находками и списком ошибок (если какие-то
+        файлы/проверки не удалось обработать).
+    """
+    if levels is None:
+        levels = sorted(VALID_LEVELS)
+    else:
+        levels = [lvl.strip().lower() for lvl in levels]
+        invalid = set(levels) - VALID_LEVELS
+        if invalid:
+            raise ValueError(
+                f'Неизвестные уровни проверки: {sorted(invalid)}. '
+                f'Допустимые значения: {sorted(VALID_LEVELS)}'
+            )
+
+    report = AuditReport(project_path=str(path), levels=levels)
+
+    files = find_config_files(path)
+    report.files_scanned = len(files)
+    if not files:
+        report.errors.append(f'Конфигурационные файлы не найдены по пути: {path}')
+        return report
+
+    files_by_folder = group_files_by_folder(files)
+
+    if 'easy' in levels:
+        for file in files:
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buf):
+                    all_easy_check(str(file))
+            except Exception as e:
+                report.errors.append(f'[easy] {file}: {e}')
+                continue
+            report.findings.extend(
+                _parse_findings_from_output(buf.getvalue(), 'easy', str(file))
+            )
+
+    if 'medium' in levels:
+        for folder, folder_files in files_by_folder.items():
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buf):
+                    all_medium_check(folder_files)
+            except Exception as e:
+                report.errors.append(f'[medium] {folder}: {e}')
+                continue
+            batch_label = f'{folder} (batch: {len(folder_files)} файлов)'
+            report.findings.extend(
+                _parse_findings_from_output(buf.getvalue(), 'medium', batch_label)
+            )
+
+    if 'hard' in levels:
+        for folder, folder_files in files_by_folder.items():
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buf):
+                    all_hard_check(folder_files)
+            except Exception as e:
+                report.errors.append(f'[hard] {folder}: {e}')
+                continue
+            # Hard_Check.py сейчас — набор заглушек без реального анализа
+            # файлов (см. docstring модуля), поэтому findings из него не
+            # извлекаются, чтобы не выдавать вымышленные результаты.
+            report.errors.append(
+                f'[hard] {folder}: hard-проверки пока заглушки, '
+                f'реальные findings не извлекались'
+            )
+
+    return report
+
+
+def audit_easy(path: str = '.') -> AuditReport:
+    """Удобная обёртка: только easy-проверки."""
+    return audit_project(path, levels=['easy'])
+
+
+def audit_medium(path: str = '.') -> AuditReport:
+    """Удобная обёртка: только medium-проверки."""
+    return audit_project(path, levels=['medium'])
+
+
+def audit_hard(path: str = '.') -> AuditReport:
+    """Удобная обёртка: только hard-проверки."""
+    return audit_project(path, levels=['hard'])
+
+
+# ==================== CLI ====================
+
+def build_parser() -> argparse.ArgumentParser:
+    """Строит argparse-парсер для CLI-режима."""
+    parser = argparse.ArgumentParser(description='Security Auditor')
+    parser.add_argument('--path', default='.', help='Путь к проекту или файлу')
+    parser.add_argument(
+        '--level', default='easy,medium,hard',
+        help='Уровни проверок через запятую: easy,medium,hard',
+    )
+    parser.add_argument('--json', action='store_true', help='Вывести результат в JSON')
+    return parser
+
+
+def main() -> None:
+    """Точка входа CLI."""
+    args = build_parser().parse_args()
+    levels = [lvl.strip().lower() for lvl in args.level.split(',') if lvl.strip()]
+
+    try:
+        report = audit_project(args.path, levels)
+    except ValueError as e:
+        print(f'❌ {e}', file=sys.stderr)
+        sys.exit(2)
+
+    if args.json:
+        print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(report.summary())
+
+    sys.exit(1 if report.critical_count > 0 else 0)
+
 
 if __name__ == '__main__':
-    print("🔍 Поиск конфигурационных файлов...")
-    print("🛡️  Запуск аудита безопасности...")
-    print("=" * 80)
+    main()
 
-    # 1. Поиск файлов (поддерживает: .yaml, .yml, .json, .tf, .tfvars, Dockerfile)
-    files = find_config_files('.')
-    print(f"\n✅ Всего найдено файлов: {len(files)}")
 
-    if not files:
-        print("\n⚠️  Файлы не найдены. Проверьте параметры поиска.")
-        exit(0)
-    rewrite_to_file('')
-    # 2. Обработка по папкам с запуском check() и check_all()
-    process_all_folders(files)
+"""
+ИНТЕГРАЦИЯ С ВЕБ (FastAPI):
 
-    # 3. Сортировки для просмотра
-    sorted_hierarchical = sort_by_name_hierarchical(files)
-    sorted_by_size = sort_by_size(files)
+    from fastapi import FastAPI
+    from find_file import audit_project
 
-    # 4. Интерактивный просмотр файлов
-    # view_file_interactive(sorted_hierarchical)
+    app = FastAPI()
+
+    @app.post("/api/audit")
+    def run_audit(path: str = ".", levels: str = "easy,medium,hard"):
+        level_list = levels.split(',')
+        report = audit_project(path, level_list)
+        return report.to_dict()
+"""

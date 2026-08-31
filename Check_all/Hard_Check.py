@@ -9,6 +9,8 @@
    Реальную логику проверки нужно добавить позже.
 """
 
+from pathlib import Path
+
 # ═══════════════════════════════════════════════════════════════
 # 🔹 РАЗДЕЛ 1: COMPLEX KUBERNETES CHECKS (51–54)
 # ═══════════════════════════════════════════════════════════════
@@ -20,7 +22,7 @@
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Анализ цепочки Service → Ingress → NetPol   │
 # └─────────────────────────────────────────────────────────────┘
-def check_cross_file_network_policy_51():
+def check_cross_file_network_policy_51(file_path,file):
     """
     Проверяет согласованность NetworkPolicy с Ingress/Service конфигурациями.
     При нахождении уязвимости выводит детальный отчёт.
@@ -81,7 +83,7 @@ def check_cross_file_network_policy_51():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Комбинация политик позволяет эскалацию прав │
 # └─────────────────────────────────────────────────────────────┘
-def check_iam_privilege_escalation_path_52():
+def check_iam_privilege_escalation_path_52(file_path,file):
     """
     Проверяет комбинации IAM политик, позволяющие повышение привилегий.
     """
@@ -140,7 +142,7 @@ def check_iam_privilege_escalation_path_52():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   SA имеет избыточные права + авто-монтирование │
 # └─────────────────────────────────────────────────────────────┘
-def check_service_account_token_abuse_53():
+def check_service_account_token_abuse_53(file_path,file):
     """
     Проверяет комбинацию избыточных прав ServiceAccount и автоматического монтирования токена.
     """
@@ -206,7 +208,7 @@ def check_service_account_token_abuse_53():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Цепочка разрешений позволяет перемещение    │
 # └─────────────────────────────────────────────────────────────┘
-def check_lateral_movement_path_54():
+def check_lateral_movement_path_54(file_path,file):
     """
     Проверяет цепочки доверенных отношений между ресурсами, позволяющие горизонтальное перемещение.
     """
@@ -271,7 +273,7 @@ def check_lateral_movement_path_54():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Пароль старше 90 дней без автоматической ротации │
 # └─────────────────────────────────────────────────────────────┘
-def check_secret_rotation_compliance_55():
+def check_secret_rotation_compliance_55(file_path,file):
     """Проверяет соответствие политик ротации секретов требованиям безопасности."""
     print("⚠️  [HIGH] Secret Rotation Compliance")
     print("  💥 Issue: Пароль в Secrets Manager старше 90 дней без автоматической ротации.")
@@ -316,7 +318,7 @@ def check_secret_rotation_compliance_55():
 # │ ⚡ Критичность: 🟡 MEDIUM                                    │
 # │ 📝 Описание:   IAM user с ключами, не использованными 90+ дней │
 # └─────────────────────────────────────────────────────────────┘
-def check_unused_iam_credentials_56():
+def check_unused_iam_credentials_56(file_path,file):
     """Проверяет наличие неактивных IAM credentials старше 90 дней."""
     print("⚠️  [MEDIUM] Unused IAM Credentials")
     print("  💥 Issue: IAM user с ключами, не использованными 90+ дней.")
@@ -367,7 +369,7 @@ def check_unused_iam_credentials_56():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   ClusterRole с verbs: ['*'] на resources: ['*'] │
 # └─────────────────────────────────────────────────────────────┘
-def check_kubernetes_rbac_overprivileged_57():
+def check_kubernetes_rbac_overprivileged_57(file_path,file):
     """Проверяет наличие чрезмерно широких разрешений в Kubernetes RBAC."""
     print("⚠️  [CRITICAL] Kubernetes RBAC Overprivileged")
     print("  💥 Issue: ClusterRole с verbs: ['*'] на resources: ['*'].")
@@ -429,7 +431,7 @@ def check_kubernetes_rbac_overprivileged_57():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   RoleBinding на serviceAccountName: default  │
 # └─────────────────────────────────────────────────────────────┘
-def check_role_binding_to_default_sa_58():
+def check_role_binding_to_default_sa_58(file_path,file):
     """Проверяет привязку ролей к сервис-аккаунту default."""
     print("⚠️  [HIGH] Role Binding to Default SA")
     print("  💥 Issue: RoleBinding на serviceAccountName: default.")
@@ -492,7 +494,7 @@ def check_role_binding_to_default_sa_58():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Отсутствуют критические admission-плагины   │
 # └─────────────────────────────────────────────────────────────┘
-def check_admission_controller_disabled_59():
+def check_admission_controller_disabled_59(file_path,file):
     """Проверяет наличие критических admission-плагинов в конфигурации API Server."""
     print("⚠️  [HIGH] Admission Controller Disabled")
     print("  💥 Issue: Отсутствуют критические admission-плагины (PodSecurity, AlwaysPullImages).")
@@ -548,7 +550,7 @@ def check_admission_controller_disabled_59():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Комбинация: privileged + hostPath + capabilities │
 # └─────────────────────────────────────────────────────────────┘
-def check_container_breakout_potential_60():
+def check_container_breakout_potential_60(file_path,file):
     """Проверяет опасные комбинации настроек безопасности контейнеров."""
     print("⚠️  [CRITICAL] Container Breakout Potential")
     print("  💥 Issue: Комбинация: privileged + hostPath + capabilities позволяет escape на хост.")
@@ -626,7 +628,7 @@ def check_container_breakout_potential_60():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Секреты зашиты прямо в код инфраструктуры   │
 # └─────────────────────────────────────────────────────────────┘
-def check_terraform_hardcoded_secrets_61():
+def check_terraform_hardcoded_secrets_61(file_path,file):
     """Проверяет наличие хардкод-секретов в Terraform конфигурациях."""
     print("⚠️  [CRITICAL] Terraform Hardcoded Secrets")
     print("  💥 Issue: Секреты зашиты прямо в код инфраструктуры (.tf файлы).")
@@ -679,7 +681,7 @@ def check_terraform_hardcoded_secrets_61():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Terraform state файл доступен публично в S3 │
 # └─────────────────────────────────────────────────────────────┘
-def check_state_file_public_access_62():
+def check_state_file_public_access_62(file_path,file):
     """Проверяет доступность Terraform state файлов в удалённом бэкенде."""
     print("⚠️  [CRITICAL] State File Public Access")
     print("  💥 Issue: Terraform state файл доступен публично в S3 bucket.")
@@ -759,7 +761,7 @@ def check_state_file_public_access_62():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Pipeline может отправить секреты на внешний webhook │
 # └─────────────────────────────────────────────────────────────┘
-def check_ci_cd_secret_exfiltration_63():
+def check_ci_cd_secret_exfiltration_63(file_path,file):
     """Проверяет риск эксфильтрации секретов через CI/CD пайплайны."""
     print("⚠️  [CRITICAL] CI/CD Secret Exfiltration")
     print("  💥 Issue: Pipeline может отправить секреты на внешний webhook.")
@@ -810,8 +812,8 @@ def check_ci_cd_secret_exfiltration_63():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Образ использует базовый образ с известными CVE │
 # └─────────────────────────────────────────────────────────────┘
-def check_dependency_chain_vulnerability_64():
-    'Не считывает dockerfile пофикси'
+def check_dependency_chain_vulnerability_64(file_path,file):
+    # TODO: Не считывает dockerfile, пофиксить
     """Проверяет использование образов с известными уязвимостями в зависимостях."""
     print("⚠️  [HIGH] Dependency Chain Vulnerability")
     print("  💥 Issue: Образ использует базовый образ с известными CVE.")
@@ -869,7 +871,7 @@ def check_dependency_chain_vulnerability_64():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   В кластер можно деплоить неподписанные образы │
 # └─────────────────────────────────────────────────────────────┘
-def check_kubernetes_supply_chain_attack_65():
+def check_kubernetes_supply_chain_attack_65(file_path,file):
     """Проверяет возможность деплоя неподписанных/неверифицированных образов в кластер."""
     print("⚠️  [CRITICAL] Kubernetes Supply Chain Attack")
     print("  💥 Issue: В кластер можно деплоить неподписанные/неверифицированные образы.")
@@ -937,7 +939,7 @@ def check_kubernetes_supply_chain_attack_65():
 # │ ⚡ Критичность: 🟡 MEDIUM                                    │
 # │ 📝 Описание:   Ресурсы созданы без обязательных тегов      │
 # └─────────────────────────────────────────────────────────────┘
-def check_cloud_resource_tagging_compliance_66():
+def check_cloud_resource_tagging_compliance_66(file_path,file):
     """Проверяет наличие обязательных тегов на облачных ресурсах."""
     print("⚠️  [MEDIUM] Cloud Resource Tagging Compliance")
     print("  💥 Issue: Ресурсы созданы без обязательных тегов (owner, cost-center, env).")
@@ -1007,7 +1009,7 @@ def check_cloud_resource_tagging_compliance_66():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   KMS ключ доступен другому аккаунту без условий │
 # └─────────────────────────────────────────────────────────────┘
-def check_encryption_key_cross_account_access_67():
+def check_encryption_key_cross_account_access_67(file_path,file):
     """Проверяет кросс-аккаунт доступ к KMS ключам без условий безопасности."""
     print("⚠️  [HIGH] Encryption Key Cross-Account Access")
     print("  💥 Issue: KMS ключ доступен другому AWS аккаунту без условий безопасности.")
@@ -1070,7 +1072,7 @@ def check_encryption_key_cross_account_access_67():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   VPC peering + route table + SG позволяют доступ из dev к prod │
 # └─────────────────────────────────────────────────────────────┘
-def check_vpc_peering_security_gap_68():
+def check_vpc_peering_security_gap_68(file_path,file):
     """Проверяет безопасность конфигурации VPC peering между окружениями."""
     print("⚠️  [HIGH] VPC Peering Security Gap")
     print("  💥 Issue: VPC peering + route table + security group позволяют доступ из dev к prod.")
@@ -1131,7 +1133,7 @@ def check_vpc_peering_security_gap_68():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Привилегированные роли Azure AD без PIM контроля │
 # └─────────────────────────────────────────────────────────────┘
-def check_azure_aad_privileged_identity_69():
+def check_azure_aad_privileged_identity_69(file_path,file):
     """Проверяет контроль активации привилегированных ролей Azure AD через PIM."""
     print("⚠️  [CRITICAL] Azure AAD Privileged Identity")
     print("  💥 Issue: Привилегированные роли Azure AD назначены без PIM контроля активации.")
@@ -1189,7 +1191,7 @@ def check_azure_aad_privileged_identity_69():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Ключи сервисных аккаунтов GCP не ротируются │
 # └─────────────────────────────────────────────────────────────┘
-def check_gcp_service_account_key_leakage_70():
+def check_gcp_service_account_key_leakage_70(file_path,file):
     """Проверяет ротацию и безопасность ключей сервисных аккаунтов GCP."""
     print("⚠️  [CRITICAL] GCP Service Account Key Leakage")
     print("  💥 Issue: Ключи сервисных аккаунтов GCP не ротируются или могут быть в repo.")
@@ -1257,7 +1259,7 @@ def check_gcp_service_account_key_leakage_70():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Путь к audit log доступен для записи контейнерами │
 # └─────────────────────────────────────────────────────────────┘
-def check_kubernetes_audit_log_tampering_71():
+def check_kubernetes_audit_log_tampering_71(file_path,file):
     """Проверяет защиту audit логов Kubernetes от модификации."""
     print("⚠️  [HIGH] Kubernetes Audit Log Tampering")
     print("  💥 Issue: Путь к audit log доступен для записи контейнерами на хосте.")
@@ -1325,7 +1327,7 @@ def check_kubernetes_audit_log_tampering_71():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Registry позволяет загружать образы без аутентификации │
 # └─────────────────────────────────────────────────────────────┘
-def check_container_registry_public_push_72():
+def check_container_registry_public_push_72(file_path,file):
     """Проверяет политики доступа к container registry для push операций."""
     print("⚠️  [CRITICAL] Container Registry Public Push")
     print("  💥 Issue: Registry позволяет загружать образы без аутентификации.")
@@ -1392,7 +1394,7 @@ def check_container_registry_public_push_72():
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Цепочка serverless ресурсов позволяет эскалацию │
 # └─────────────────────────────────────────────────────────────┘
-def check_serverless_function_chain_exploit_73():
+def check_serverless_function_chain_exploit_73(file_path,file):
     """Проверяет цепочки serverless ресурсов на риск эскалации привилегий."""
     print("⚠️  [CRITICAL] Serverless Function Chain Exploit")
     print("  💥 Issue: Цепочка serverless ресурсов позволяет эскалацию привилегий (API → Lambda → DB → SNS).")
@@ -1461,7 +1463,7 @@ def check_serverless_function_chain_exploit_73():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Federation trust между облаками без MFA и ограничений │
 # └─────────────────────────────────────────────────────────────┘
-def check_multi_cloud_identity_federation_74():
+def check_multi_cloud_identity_federation_74(file_path,file):
     """Проверяет безопасность federation trust между облачными провайдерами."""
     print("⚠️  [HIGH] Multi-Cloud Identity Federation")
     print("  💥 Issue: Federation trust между облаками без MFA и ограничений.")
@@ -1533,7 +1535,7 @@ def check_multi_cloud_identity_federation_74():
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Текущее состояние отличается от Terraform state │
 # └─────────────────────────────────────────────────────────────┘
-def check_drift_detection_from_baseline_75():
+def check_drift_detection_from_baseline_75(file_path,file):
     """Проверяет наличие drift detection между IaC конфигурацией и реальным состоянием."""
     print("⚠️  [HIGH] Drift Detection from Baseline")
     print("  💥 Issue: Текущее состояние инфраструктуры отличается от Terraform state.")
@@ -1600,123 +1602,152 @@ def check_drift_detection_from_baseline_75():
     print("      • Интегрируйте drift check в CI/CD pipeline")
     print()
 
-def all_hard_check():
+def all_hard_check(files=None):
     """
     ╔════════════════════════════════════════════════════════════════╗
     ║  🔐 ЗАПУСК ВСЕХ ПРОВЕРОК HARD LEVEL (51–75)                   ║
     ╚════════════════════════════════════════════════════════════════╝
+
+    Принимает:
+      files=None       — демонстрационный режим (пустые file_path/file_content);
+      files=str/Path    — один файл;
+      files=list[...]   — список файлов.
+    Нечитаемые файлы пропускаются с предупреждением, а не роняют аудит.
     """
-    print("\n" + "=" * 70)
-    print("🔐 Security Auditor — Hard Level Checks (51–75)")
-    print("=" * 70 + "\n")
+    if files is None:
+        items = [("", "")]
+    else:
+        if isinstance(files, (str, Path)):
+            file_list = [files]
+        else:
+            file_list = list(files)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 1: COMPLEX KUBERNETES CHECKS (51–54)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("📦 РАЗДЕЛ 1: Complex Kubernetes Checks (51–54)\n")
-    print("─" * 70)
+        items = []
+        for f in file_list:
+            path = Path(f)
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    items.append((str(path), fh.read()))
+            except Exception as e:
+                print(f"⚠️  Не удалось прочитать файл {path}: {e}")
+                continue
 
-    check_cross_file_network_policy_51()           # 51
-    check_iam_privilege_escalation_path_52()       # 52
-    check_service_account_token_abuse_53()         # 53
-    check_lateral_movement_path_54()               # 54
+        if not items:
+            print("⚠️  Нет доступных для чтения файлов — Hard-проверки пропущены.")
+            return
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 2: COMPLIANCE & GOVERNANCE CHECKS (55–58)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 2: Compliance & Governance Checks (55–58)\n")
-    print("─" * 70)
+    for file_path, file_content in items:
+        print("\n" + "=" * 70)
+        print("🔐 Security Auditor — Hard Level Checks (51–75)")
+        print("=" * 70 + "\n")
 
-    check_secret_rotation_compliance_55()          # 55
-    check_unused_iam_credentials_56()              # 56
-    check_kubernetes_rbac_overprivileged_57()      # 57
-    check_role_binding_to_default_sa_58()          # 58
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 1: COMPLEX KUBERNETES CHECKS (51–54)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("📦 РАЗДЕЛ 1: Complex Kubernetes Checks (51–54)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 3: KUBERNETES ADMISSION & ESCAPE CHECKS (59–60)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 3: Kubernetes Admission & Escape Checks (59–60)\n")
-    print("─" * 70)
+        check_cross_file_network_policy_51(file_path, file_content)           # 51
+        check_iam_privilege_escalation_path_52(file_path, file_content)       # 52
+        check_service_account_token_abuse_53(file_path, file_content)         # 53
+        check_lateral_movement_path_54(file_path, file_content)               # 54
 
-    check_admission_controller_disabled_59()       # 59
-    check_container_breakout_potential_60()        # 60
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 2: COMPLIANCE & GOVERNANCE CHECKS (55–58)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 2: Compliance & Governance Checks (55–58)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 4: INFRASTRUCTURE AS CODE CHECKS (61–62)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 4: Infrastructure as Code Checks (61–62)\n")
-    print("─" * 70)
+        check_secret_rotation_compliance_55(file_path, file_content)          # 55
+        check_unused_iam_credentials_56(file_path, file_content)              # 56
+        check_kubernetes_rbac_overprivileged_57(file_path, file_content)      # 57
+        check_role_binding_to_default_sa_58(file_path, file_content)          # 58
 
-    check_terraform_hardcoded_secrets_61()         # 61
-    check_state_file_public_access_62()            # 62
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 3: KUBERNETES ADMISSION & ESCAPE CHECKS (59–60)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 3: Kubernetes Admission & Escape Checks (59–60)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 5: CI/CD & SUPPLY CHAIN CHECKS (63–65)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 5: CI/CD & Supply Chain Checks (63–65)\n")
-    print("─" * 70)
+        check_admission_controller_disabled_59(file_path, file_content)       # 59
+        check_container_breakout_potential_60(file_path, file_content)        # 60
 
-    check_ci_cd_secret_exfiltration_63()           # 63
-    check_dependency_chain_vulnerability_64()      # 64
-    check_kubernetes_supply_chain_attack_65()      # 65
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 4: INFRASTRUCTURE AS CODE CHECKS (61–62)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 4: Infrastructure as Code Checks (61–62)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 6: CLOUD GOVERNANCE CHECKS (66–68)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 6: Cloud Governance Checks (66–68)\n")
-    print("─" * 70)
+        check_terraform_hardcoded_secrets_61(file_path, file_content)         # 61
+        check_state_file_public_access_62(file_path, file_content)            # 62
 
-    check_cloud_resource_tagging_compliance_66()   # 66
-    check_encryption_key_cross_account_access_67() # 67
-    check_vpc_peering_security_gap_68()            # 68
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 5: CI/CD & SUPPLY CHAIN CHECKS (63–65)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 5: CI/CD & Supply Chain Checks (63–65)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 7: IDENTITY & ACCESS CHECKS (69–70)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 7: Identity & Access Checks (69–70)\n")
-    print("─" * 70)
+        check_ci_cd_secret_exfiltration_63(file_path, file_content)           # 63
+        check_dependency_chain_vulnerability_64(file_path, file_content)      # 64
+        check_kubernetes_supply_chain_attack_65(file_path, file_content)      # 65
 
-    check_azure_aad_privileged_identity_69()       # 69
-    check_gcp_service_account_key_leakage_70()     # 70
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 6: CLOUD GOVERNANCE CHECKS (66–68)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 6: Cloud Governance Checks (66–68)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 8: ADVANCED KUBERNETES CHECKS (71–72)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 8: Advanced Kubernetes Checks (71–72)\n")
-    print("─" * 70)
+        check_cloud_resource_tagging_compliance_66(file_path, file_content)   # 66
+        check_encryption_key_cross_account_access_67(file_path, file_content) # 67
+        check_vpc_peering_security_gap_68(file_path, file_content)            # 68
 
-    check_kubernetes_audit_log_tampering_71()      # 71
-    check_container_registry_public_push_72()      # 72
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 7: IDENTITY & ACCESS CHECKS (69–70)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 7: Identity & Access Checks (69–70)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 РАЗДЕЛ 9: SERVERLESS & MULTI-CLOUD CHECKS (73–75)
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n📦 РАЗДЕЛ 9: Serverless & Multi-Cloud Checks (73–75)\n")
-    print("─" * 70)
+        check_azure_aad_privileged_identity_69(file_path, file_content)       # 69
+        check_gcp_service_account_key_leakage_70(file_path, file_content)     # 70
 
-    check_serverless_function_chain_exploit_73()   # 73
-    check_multi_cloud_identity_federation_74()     # 74
-    check_drift_detection_from_baseline_75()       # 75
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 8: ADVANCED KUBERNETES CHECKS (71–72)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 8: Advanced Kubernetes Checks (71–72)\n")
+        print("─" * 70)
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # 🔹 ИТОГОВЫЙ ОТЧЁТ
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    print("\n" + "=" * 70)
-    print("✅ ВСЕ ПРОВЕРКИ HARD LEVEL ЗАВЕРШЕНЫ")
-    print("=" * 70)
-    print("""
-📊 Сводка:
-    • Всего проверок: 25
-    • Complex K8s:    4  (51–54) .yaml, .yml, .json
-    • Compliance:     4  (55–58) .yaml, .json
-    • K8s Admission:  2  (59–60) .yaml, .conf
-    • IaC:            2  (61–62) .tf, .tfvars, .yaml
-    • CI/CD:          3  (63–65) .yaml, .yml, .json
-    • Cloud Gov:      3  (66–68) .yaml, .json
-    • Identity:       2  (69–70) .yaml, .json
-    • Advanced K8s:   2  (71–72) .yaml, .conf
-    • Serverless:     3  (73–75) .yaml, .json, .tf
+        check_kubernetes_audit_log_tampering_71(file_path, file_content)      # 71
+        check_container_registry_public_push_72(file_path, file_content)      # 72
+
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 РАЗДЕЛ 9: SERVERLESS & MULTI-CLOUD CHECKS (73–75)
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n📦 РАЗДЕЛ 9: Serverless & Multi-Cloud Checks (73–75)\n")
+        print("─" * 70)
+
+        check_serverless_function_chain_exploit_73(file_path, file_content)   # 73
+        check_multi_cloud_identity_federation_74(file_path, file_content)     # 74
+        check_drift_detection_from_baseline_75(file_path, file_content)       # 75
+
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # 🔹 ИТОГОВЫЙ ОТЧЁТ
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        print("\n" + "=" * 70)
+        print("✅ ВСЕ ПРОВЕРКИ HARD LEVEL ЗАВЕРШЕНЫ")
+        print("=" * 70)
+        print("""
+    📊 Сводка:
+        • Всего проверок: 25
+        • Complex K8s:    4  (51–54) .yaml, .yml, .json
+        • Compliance:     4  (55–58) .yaml, .json
+        • K8s Admission:  2  (59–60) .yaml, .conf
+        • IaC:            2  (61–62) .tf, .tfvars, .yaml
+        • CI/CD:          3  (63–65) .yaml, .yml, .json
+        • Cloud Gov:      3  (66–68) .yaml, .json
+        • Identity:       2  (69–70) .yaml, .json
+        • Advanced K8s:   2  (71–72) .yaml, .conf
+        • Serverless:     3  (73–75) .yaml, .json, .tf
 	
 
 
-    """)
+        """)
