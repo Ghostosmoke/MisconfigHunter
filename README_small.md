@@ -22,17 +22,23 @@ MisconfigHunter не требует сети, аккаунтов в облаке
 ## 🚀 Быстрый старт
 
 ```bash
-# Проверить весь текущий проект всеми уровнями
-python find_file.py
+# Быстрая проверка текущей папки
+python main.py --easy
 
-# Только Easy-проверки, конкретный путь
-python find_file.py --path ./my-project --level easy
+# Быстрая проверка конкретной папки (короткие флаги)
+python main.py -e -t ./my-project
 
-# Несколько уровней через запятую
-python find_file.py --level easy,medium
+# Глубокая проверка (все три уровня)
+python main.py --deep --target ./infra
 
-# JSON-вывод для интеграции (CI/CD, веб-сервис)
-python find_file.py --level easy,medium --json
+# Без флагов — быстрая проверка текущей папки по умолчанию
+python main.py
+
+# Проверка одного файла
+python main.py -e -t deployment.yaml
+
+# Справка
+python main.py -h
 ```
 
 ## 📦 Установка
