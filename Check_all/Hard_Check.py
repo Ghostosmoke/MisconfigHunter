@@ -10,6 +10,125 @@
 """
 
 from pathlib import Path
+import re
+
+# Заполняется all_hard_check() перед циклом по файлам — позволяет
+# по-настоящему кросс-файловым проверкам видеть содержимое всего набора
+# файлов, а не только того, для которого их вызвали.
+_CURRENT_BATCH_CONTENTS = {}
+
+WORKLOAD_KINDS = {'Pod', 'Deployment', 'StatefulSet', 'DaemonSet'}
+
+
+def _split_yaml_documents(content):
+    """Разбивает файл на YAML-документы по разделителю '---'."""
+    return re.split(r'^\s*---\s*$', content, flags=re.MULTILINE)
+
+
+def _remove_inline_comment(line):
+    """Quote-aware удаление inline-комментария (# вне кавычек)."""
+    out = []
+    in_single = in_double = False
+    for ch in line:
+        if ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == '"' and not in_single:
+            in_double = not in_double
+        elif ch == '#' and not in_single and not in_double:
+            break
+        out.append(ch)
+    return ''.join(out).rstrip()
+
+
+def _extract_allow_actions(content):
+    """
+    Возвращает список (line_num, action) для IAM-действий, найденных в
+    контексте Effect: Allow / effect = "Allow" (CloudFormation JSON/YAML
+    и Terraform IAM policy document).
+
+    Эвристика (окно ±15 строк вокруг Effect: Allow), а не полноценный
+    JSON/HCL AST — может пропустить редкие форматы записи или (реже)
+    ошибочно связать Action соседнего statement в том же окне. Проверки,
+    построенные на этой функции, должны трактовать её результат как
+    сигнал для дальнейшего ручного review, а не как окончательный вердикт.
+    """
+    lines = content.splitlines()
+    results = []
+    effect_allow_idx = [
+        i for i, l in enumerate(lines)
+        if re.search(r'["\']?[Ee]ffect["\']?\s*[:=]\s*["\']?Allow["\']?', l)
+    ]
+
+    for eff_idx in effect_allow_idx:
+        start = max(0, eff_idx - 15)
+        end = min(len(lines), eff_idx + 15)
+        window_lines = lines[start:end]
+        window_text = '\n'.join(window_lines)
+
+        # "Action": ["a", "b"]  /  actions = ["a", "b"]  (JSON/Terraform inline список)
+        for m in re.finditer(r'["\']?[Aa]ctions?["\']?\s*[:=]\s*\[([^\]]*)\]', window_text):
+            line_offset = window_text[:m.start()].count('\n')
+            for am in re.finditer(r'["\']([\w:\-\*]+)["\']', m.group(1)):
+                results.append((start + line_offset + 1, am.group(1)))
+
+        # "Action": "a"  /  Action: a  (одиночное значение)
+        for m in re.finditer(r'["\']?[Aa]ctions?["\']?\s*[:=]\s*["\']([\w:\-\*]+)["\']', window_text):
+            line_offset = window_text[:m.start()].count('\n')
+            results.append((start + line_offset + 1, m.group(1)))
+
+        # YAML block-список:
+        #   Action:
+        #     - iam:PassRole
+        for m in re.finditer(r'[Aa]ctions?\s*:\s*\n((?:\s*-\s*["\']?[\w:\-\*]+["\']?\s*\n?)+)', window_text):
+            block_start_offset = window_text[:m.start()].count('\n')
+            for j, bline in enumerate(m.group(1).splitlines()):
+                bm = re.match(r'\s*-\s*["\']?([\w:\-\*]+)["\']?', bline)
+                if bm:
+                    results.append((start + block_start_offset + 1 + j + 1, bm.group(1)))
+
+    return results
+
+
+def _action_covered(found_actions_lower, required_action):
+    """True, если required_action покрыт множеством найденных действий
+    (с учётом wildcard '*' и 'service:*')."""
+    if '*' in found_actions_lower:
+        return True
+    service = required_action.split(':')[0]
+    if f'{service}:*' in found_actions_lower:
+        return True
+    return required_action in found_actions_lower
+
+
+# Известные комбинации IAM-разрешений, дающие privilege escalation в AWS
+# (подмножество каталога, задокументированного Rhino Security Labs).
+# Каждый элемент: (множество необходимых действий, человекочитаемое описание).
+IAM_ESCALATION_PATTERNS = [
+    ({'iam:passrole', 'ec2:runinstances'},
+     "PassRole + RunInstances: можно поднять EC2-инстанс с привилегированной ролью и получить на нём shell"),
+    ({'iam:passrole', 'lambda:createfunction', 'lambda:invokefunction'},
+     "PassRole + Lambda CreateFunction/InvokeFunction: можно выполнить произвольный код с чужой ролью"),
+    ({'iam:passrole', 'cloudformation:createstack'},
+     "PassRole + CloudFormation CreateStack: можно создать стек с привилегированной ролью"),
+    ({'iam:passrole', 'glue:createdevendpoint'},
+     "PassRole + Glue CreateDevEndpoint: можно получить SSH-доступ с привилегированной ролью"),
+    ({'iam:createpolicyversion'},
+     "CreatePolicyVersion: можно создать новую версию своей же политики с правами '*' (SetAsDefault поддерживается прямо в этом же вызове)"),
+    ({'iam:setdefaultpolicyversion'},
+     "SetDefaultPolicyVersion: можно откатить политику на более старую версию с широкими правами"),
+    ({'iam:attachuserpolicy'},
+     "AttachUserPolicy: можно прикрепить AdministratorAccess самому себе"),
+    ({'iam:attachrolepolicy'},
+     "AttachRolePolicy: можно прикрепить AdministratorAccess к контролируемой роли"),
+    ({'iam:putuserpolicy'},
+     "PutUserPolicy: можно встроить inline-политику с правами '*'"),
+    ({'iam:putrolepolicy'},
+     "PutRolePolicy: можно встроить inline-политику с правами '*' в контролируемую роль"),
+    ({'iam:createaccesskey'},
+     "CreateAccessKey: можно создать ключи доступа для другого, более привилегированного пользователя"),
+    ({'iam:updateassumerolepolicy', 'sts:assumerole'},
+     "UpdateAssumeRolePolicy + AssumeRole: можно изменить trust policy роли и затем принять её"),
+]
 
 # ═══════════════════════════════════════════════════════════════
 # 🔹 РАЗДЕЛ 1: COMPLEX KUBERNETES CHECKS (51–54)
@@ -22,56 +141,91 @@ from pathlib import Path
 # │ ⚡ Критичность: 🟠 HIGH                                      │
 # │ 📝 Описание:   Анализ цепочки Service → Ingress → NetPol   │
 # └─────────────────────────────────────────────────────────────┘
-def check_cross_file_network_policy_51(file_path,file):
+def check_cross_file_network_policy_51(file_path, file):
     """
-    Проверяет согласованность NetworkPolicy с Ingress/Service конфигурациями.
-    При нахождении уязвимости выводит детальный отчёт.
+    Проверка 51: Cross-File Network Policy.
+
+    Ищет Kubernetes workload'ы (Pod/Deployment/StatefulSet/DaemonSet) в ЭТОМ
+    файле и проверяет, есть ли хотя бы один NetworkPolicy во ВСЁМ наборе
+    проверяемых файлов (не только в этом одном) — это и есть кросс-файловая
+    часть проверки.
+
+    Ограничение (сознательное, чтобы не выдавать ложную точность): полное
+    сопоставление namespace/podSelector между workload и NetworkPolicy
+    требует настоящего YAML-парсера с label-matching и здесь не делается.
+    Проверка консервативна — она находит случаи, когда во всём наборе
+    файлов НЕТ НИ ОДНОГО NetworkPolicy, а не то, что конкретный workload
+    не покрыт конкретной политикой.
     """
+    if not file:
+        return None
+
+    findings = []
+    for doc in _split_yaml_documents(file):
+        doc_lines = doc.splitlines()
+        kind = None
+        kind_line_idx = None
+        name = None
+        for i, line in enumerate(doc_lines):
+            clean = _remove_inline_comment(line)
+            if kind is None:
+                m = re.match(r'^\s*kind\s*:\s*["\']?(\w+)["\']?\s*$', clean, re.IGNORECASE)
+                if m and m.group(1) in WORKLOAD_KINDS:
+                    kind = m.group(1)
+                    kind_line_idx = i
+            if name is None:
+                m2 = re.match(r'^\s*name\s*:\s*["\']?([\w.\-]+)["\']?\s*$', clean, re.IGNORECASE)
+                if m2:
+                    name = m2.group(1)
+        if kind is None:
+            continue
+        pos = file.find(doc)
+        doc_start_line = file[:pos].count('\n') + 1 if pos != -1 else 1
+        findings.append((doc_start_line + kind_line_idx, kind, name or '(без имени)'))
+
+    if not findings:
+        return None
+
+    # Кросс-файловая часть: смотрим на ВЕСЬ набор файлов, а не только на этот.
+    batch = _CURRENT_BATCH_CONTENTS or {file_path: file}
+    has_network_policy = any(
+        re.search(r'^\s*kind\s*:\s*["\']?NetworkPolicy["\']?\s*$', content, re.IGNORECASE | re.MULTILINE)
+        for content in batch.values()
+    )
+    if has_network_policy:
+        return None
+
+    lines = file.splitlines()
+    locations = []
+    for line_num, kind, name in findings:
+        line_text = lines[line_num - 1].strip() if 0 < line_num <= len(lines) else f'kind: {kind}'
+        locations.append(
+            f"    📁 {file_path}:{line_num}: {line_text}  ← {kind} '{name}': в наборе файлов нет ни одного NetworkPolicy"
+        )
+
     print("⚠️  [HIGH] Cross-File Network Policy")
+    print(f"  📍 Найдено проблем: {len(findings)}")
+    print('\n'.join(locations))
     print("  💥 Issue: Pod может быть достигнут из интернета через цепочку Service → Ingress → NetworkPolicy.")
-    print("  🎯 Risk: Ложное чувство безопасности: есть NetworkPolicy, но трафик всё равно доходит до пода через публичный Ingress. Атакующий может эксплуатировать уязвимости в приложении.")
+    print("  🎯 Risk: Ложное чувство безопасности: есть workload, но нет ни одной NetworkPolicy — по умолчанию весь трафик внутри кластера разрешён. Компрометация одного пода даёт сетевой доступ ко всем остальным.")
     print("  ❌ Insecure:")
-    print("        # 01_pod.yaml")
-    print("        apiVersion: v1")
-    print("        kind: Pod")
+    print("        # deployment.yaml")
+    print("        apiVersion: apps/v1")
+    print("        kind: Deployment")
     print("        metadata:")
-    print("          labels:")
-    print("            app: backend")
-    print("        # 03_ingress.yaml - Ingress без TLS и ограничений")
-    print("        apiVersion: networking.k8s.io/v1")
-    print("        kind: Ingress")
-    print("        spec:")
-    print("          rules:")
-    print("          - http:")
-    print("              paths:")
-    print("              - backend:")
-    print("                  service:")
-    print("                    name: backend-svc")
-    print("                    port: { number: 80 }")
-    print("        # ❌ Нет tls: секции, нет annotations для rate-limiting")
+    print("          name: backend")
+    print("        # ни в одном файле набора нет kind: NetworkPolicy")
     print("  ✅ Secure:")
-    print("        # Согласованная конфигурация:")
-    print("        # 1. Ingress с TLS и ограничением по IP:")
+    print("        apiVersion: networking.k8s.io/v1")
+    print("        kind: NetworkPolicy")
+    print("        metadata:")
+    print("          name: default-deny")
     print("        spec:")
-    print("          tls:")
-    print("          - hosts: [api.example.com]")
-    print("            secretName: api-tls")
-    print("          rules:")
-    print("          - host: api.example.com")
-    print("            http: { paths: [...] }")
-    print("          annotations:")
-    print("            nginx.ingress.kubernetes.io/whitelist-source-range: \"10.0.0.0/8\"")
-    print("        # 2. NetworkPolicy разрешает только от ingress-контроллера:")
-    print("        spec:")
-    print("          ingress:")
-    print("          - from:")
-    print("            - namespaceSelector: { matchLabels: { name: ingress-nginx } }")
-    print("            - podSelector: { matchLabels: { app.kubernetes.io/name: ingress-nginx } }")
-    print("            ports: [{ protocol: TCP, port: 8080 }]")
+    print("          podSelector: {}")
+    print("          policyTypes: [Ingress, Egress]")
     print("  🛠️ Remediation:")
-    print("      • Настройте согласованные NetworkPolicy для всех сервисов")
-    print("      • Включите TLS на всех Ingress")
-    print("      • Ограничьте трафик на уровне ingress-контроллера")
+    print("      • Добавьте NetworkPolicy с default-deny и явными allow-правилами")
+    print("      • Убедитесь, что политика покрывает все namespace с рабочими нагрузками")
     print("      • Используйте podSelector в NetworkPolicy для точного контроля")
     print()
 
@@ -83,13 +237,73 @@ def check_cross_file_network_policy_51(file_path,file):
 # │ ⚡ Критичность: 🔴 CRITICAL                                  │
 # │ 📝 Описание:   Комбинация политик позволяет эскалацию прав │
 # └─────────────────────────────────────────────────────────────┘
-def check_iam_privilege_escalation_path_52(file_path,file):
+def check_iam_privilege_escalation_path_52(file_path, file):
     """
-    Проверяет комбинации IAM политик, позволяющие повышение привилегий.
+    Проверка 52: IAM Privilege Escalation Path.
+
+    Собирает все действия (Action), разрешённые (Effect: Allow) где-либо в
+    этом файле (CloudFormation JSON/YAML, Terraform IAM policy document),
+    и проверяет, не покрывает ли это множество один из известных наборов
+    разрешений, дающих privilege escalation в AWS (см. IAM_ESCALATION_PATTERNS
+    — подмножество каталога, задокументированного Rhino Security Labs).
+
+    Ограничение (сознательно не проверяется): реальная эксплуатируемость
+    зависит ещё и от Resource (ARN должен указывать на ресурсы, которыми
+    атакующий управляет — например, на себя самого) и от Condition-блоков,
+    которые могут сужать применимость. Эта проверка смотрит только на
+    множество разрешённых Action, поэтому возможны false positives,
+    когда права ограничены узким Resource/Condition — это сигнал для
+    ручного review, а не окончательный вердикт.
     """
+    if not file:
+        return None
+
+    action_hits = _extract_allow_actions(file)
+    if not action_hits:
+        return None
+
+    # Для каждого уникального действия запоминаем первую строку, где оно встретилось
+    first_line_by_action = {}
+    for line_num, action in action_hits:
+        key = action.lower()
+        if key not in first_line_by_action:
+            first_line_by_action[key] = (line_num, action)
+
+    found_actions_lower = set(first_line_by_action.keys())
+
+    findings = []
+    lines = file.splitlines()
+    for required, description in IAM_ESCALATION_PATTERNS:
+        if not all(_action_covered(found_actions_lower, req) for req in required):
+            continue
+        involved = []
+        for req in sorted(required):
+            if req in first_line_by_action:
+                involved.append(first_line_by_action[req])
+            else:
+                # покрыто через wildcard (iam:* или *) — конкретной строки для req нет
+                wildcard_line = first_line_by_action.get('*') or first_line_by_action.get(f"{req.split(':')[0]}:*")
+                if wildcard_line:
+                    involved.append(wildcard_line)
+        if not involved:
+            continue
+        primary_line, primary_action = involved[0]
+        line_text = lines[primary_line - 1].strip() if 0 < primary_line <= len(lines) else primary_action
+        findings.append((primary_line, line_text, description))
+
+    if not findings:
+        return None
+
+    locations = '\n'.join(
+        f"    📁 {file_path}:{num}: {text}  ← {reason}"
+        for num, text, reason in findings
+    )
+
     print("⚠️  [CRITICAL] IAM Privilege Escalation Path")
-    print("  💥 Issue: Комбинация политик IAM позволяет пользователю повысить свои привилегии.")
-    print("  🎯 Risk: Privilege escalation: пользователь получает административные права, может создать новых пользователей, удалить логи, получить доступ ко всем ресурсам аккаунта.")
+    print(f"  📍 Найдено проблем: {len(findings)}")
+    print(locations)
+    print("  💥 Issue: Комбинация разрешённых IAM-действий в этом файле позволяет повысить привилегии.")
+    print("  🎯 Risk: Privilege escalation: принципал может получить административные права, создать новых пользователей, удалить логи, получить доступ ко всем ресурсам аккаунта.")
     print("  ❌ Insecure:")
     print("        # Политика 1: разрешает PassRole")
     print("        {")
@@ -128,10 +342,10 @@ def check_iam_privilege_escalation_path_52(file_path,file):
     print("          }")
     print("        }")
     print("  🛠️ Remediation:")
-    print("      • Разделите PassRole и CreatePolicyVersion права")
-    print("      • Добавьте условия (Condition) к IAM политикам")
-    print("      • Запретите создание версий политик для обычных пользователей")
-    print("      • Используйте IAM Access Analyzer для аудита")
+    print("      • Разделите PassRole и CreatePolicyVersion/Attach*Policy права между разными принципалами")
+    print("      • Добавьте условия (Condition) к IAM политикам, сужающие Resource/PassedToService")
+    print("      • Запретите создание/изменение версий политик и attach-права для обычных пользователей")
+    print("      • Используйте IAM Access Analyzer для аудита реальных путей эскалации")
     print()
 
 
@@ -1636,6 +1850,9 @@ def all_hard_check(files=None):
             print("⚠️  Нет доступных для чтения файлов — Hard-проверки пропущены.")
             return
 
+    global _CURRENT_BATCH_CONTENTS
+    _CURRENT_BATCH_CONTENTS = dict(items)
+
     for file_path, file_content in items:
         print("\n" + "=" * 70)
         print("🔐 Security Auditor — Hard Level Checks (51–75)")
@@ -1751,3 +1968,5 @@ def all_hard_check(files=None):
 
 
         """)
+
+    _CURRENT_BATCH_CONTENTS = {}
